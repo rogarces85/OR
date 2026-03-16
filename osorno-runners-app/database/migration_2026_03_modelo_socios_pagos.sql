@@ -1,0 +1,11 @@
+USE osorno_runners;
+
+ALTER TABLE socios
+  DROP COLUMN IF EXISTS situacion,
+  DROP COLUMN IF EXISTS valor_cuota_base;
+
+ALTER TABLE pagos
+  ADD COLUMN IF NOT EXISTS tipo_cuota ENUM('ACTIVO','MEMBRESIA','BECADO','OTRO') NOT NULL DEFAULT 'ACTIVO' AFTER valor_cuota;
+
+ALTER TABLE movimientos_bancarios
+  ADD COLUMN IF NOT EXISTS tipo_cuota ENUM('ACTIVO','MEMBRESIA','BECADO','OTRO') NULL AFTER categoria;
