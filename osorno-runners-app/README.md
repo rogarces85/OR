@@ -75,6 +75,7 @@ Se agrego API en `api/` para que toda la operacion quede en MySQL:
 
 - `api/bootstrap.php`
 - `api/import_base.php`
+- `api/import_estado_cuotas.php`
 - `api/import_movimientos.php`
 - `api/create_pago.php`
 - `api/procesar_movimiento.php`
@@ -110,7 +111,9 @@ Resultado actual en BD:
 - Se integro `TailwindCSS` en la app (config en `tailwind.config.js` y `postcss.config.js`).
 - Dashboard renovado con visual mas moderno, tarjetas operativas y foco en pendientes/conflictos.
 - Se agrego grafico de tendencia mensual usando `Recharts`.
+- Se agrego modulo `Estado anual` para leer y guardar en MySQL el archivo `Estado de cuotas OR 2024.xlsx`.
 
 Migration aplicada en BD:
 
 - `database/migration_2026_03_modelo_socios_pagos.sql`
+- `database/migration_2026_03_estado_cuotas.sql`

@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --text: #121212;
-  --muted: #4f4f4f;
-  --line: #dddddd;
-  --red: #c1121f;
-  --bg: #ffffff;
+  --text: #dee5ff;
+  --muted: #a3aac4;
+  --line: #40485d;
+  --red: #ff7351;
+  --bg: #060e20;
 }
 
 * {
@@ -24,18 +24,16 @@ body,
 }
 
 body {
-  font-family: 'Barlow', 'Trebuchet MS', sans-serif;
+  font-family: 'Inter', sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at 14% 14%, rgba(193, 18, 31, 0.1), transparent 36%),
-    radial-gradient(circle at 86% 2%, rgba(0, 0, 0, 0.07), transparent 33%),
-    var(--bg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 @layer base {
   h1,
   h2,
   h3 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Manrope', sans-serif;
   }
 }
