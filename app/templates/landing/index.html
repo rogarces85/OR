@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block titulo %}Osorno Runners · Comunidad de running en Osorno{% endblock %}
+
+{# ------------------------------------------------------------------ #}
+{# Header/Nav (sección 1 de UI-01): logo, enlaces y botón "Ingresar". #}
+{# El botón apunta a /ingresar (el inicio de sesión llega en H4).      #}
+{# ------------------------------------------------------------------ #}
+{% block encabezado %}
+<header class="sticky top-0 z-40 bg-marca-negro text-marca-blanco" x-data="{ menu: false }">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <a href="#inicio" class="text-lg font-bold tracking-tight">
+      Osorno <span class="text-marca-rojo">Runners</span>
+    </a>
+
+    <nav class="hidden items-center gap-6 text-sm md:flex">
+      <a href="#inicio" class="transition-colors hover:text-marca-rojo">Inicio</a>
+      <a href="#quienes-somos" class="transition-colors hover:text-marca-rojo">Quiénes somos</a>
+      <a href="#membresias" class="transition-colors hover:text-marca-rojo">Membresías</a>
+      <a href="#contacto" class="transition-colors hover:text-marca-rojo">Contacto</a>
+      <a href="/ingresar"
+         class="rounded bg-marca-rojo px-4 py-2 font-medium text-marca-blanco transition-colors hover:bg-red-700">
+        Ingresar
+      </a>
+    </nav>
+
+    <button type="button"
+            class="rounded p-2 md:hidden"
+            aria-label="Abrir menú"
+            @click="menu = !menu">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </div>
+
+  {# Menú móvil (Alpine.js) #}
+  <div class="md:hidden" x-show="menu" x-cloak @click.outside="menu = false">
+    <nav class="flex flex-col gap-1 border-t border-white/10 px-4 py-3 text-sm">
+      <a href="#inicio" class="rounded px-2 py-2 hover:bg-white/10" @click="menu = false">Inicio</a>
+      <a href="#quienes-somos" class="rounded px-2 py-2 hover:bg-white/10" @click="menu = false">Quiénes somos</a>
+      <a href="#membresias" class="rounded px-2 py-2 hover:bg-white/10" @click="menu = false">Membresías</a>
+      <a href="#contacto" class="rounded px-2 py-2 hover:bg-white/10" @click="menu = false">Contacto</a>
+      <a href="/ingresar"
+         class="mt-1 rounded bg-marca-rojo px-3 py-2 text-center font-medium hover:bg-red-700">
+        Ingresar
+      </a>
+    </nav>
+  </div>
+</header>
+{% endblock %}
+
+{% block contenido %}
+
+{# ------------------------- Sección 2: Hero ------------------------- #}
+<section id="inicio" class="scroll-mt-20 bg-marca-negro text-marca-blanco">
+  <div class="mx-auto max-w-6xl px-4 py-20 md:py-28">
+    <p class="text-sm font-semibold uppercase tracking-widest text-marca-rojo">Osorno, Chile</p>
+    <h1 class="mt-3 text-4xl font-bold md:text-6xl">Osorno Runners</h1>
+    <p class="mt-4 max-w-2xl text-lg text-marca-blanco/80">
+      Comunidad de running en Osorno
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#membresias"
+         class="rounded bg-marca-rojo px-5 py-2.5 font-medium transition-colors hover:bg-red-700">
+        Ver membresías
+      </a>
+      <a href="#contacto"
+         class="rounded border border-white/30 px-5 py-2.5 font-medium transition-colors hover:bg-white/10">
+        Contáctanos
+      </a>
+    </div>
+  </div>
+</section>
+
+{# ------------------- Sección 3: Quiénes somos --------------------- #}
+{# Texto provisional: se ajustará con el contenido final del club.   #}
+<section id="quienes-somos" class="scroll-mt-20 bg-marca-blanco">
+  <div class="mx-auto max-w-6xl px-4 py-16">
+    <h2 class="text-2xl font-bold md:text-3xl">Quiénes somos</h2>
+    <p class="mt-4 max-w-3xl text-gray-700">
+      Osorno Runners es una comunidad de corredores de Osorno que entrena y
+      comparte en torno al running. Este sitio reúne la información de las
+      membresías y de los pagos del club, y es además la puerta de entrada al
+      sistema de gestión para sus miembros.
+    </p>
+  </div>
+</section>
+
+{# ------------------- Sección 4: Membresías ------------------------ #}
+<section id="membresias" class="scroll-mt-20 bg-gray-50">
+  <div class="mx-auto max-w-6xl px-4 py-16">
+    <h2 class="text-2xl font-bold md:text-3xl">Membresías</h2>
+    <p class="mt-3 max-w-2xl text-gray-700">
+      El club cuenta con una matrícula de incorporación y dos cuotas mensuales
+      según tu forma de participación.
+    </p>
+
+    <div class="mt-8 grid gap-6 md:grid-cols-3">
+      {# Matrícula #}
+      <div class="flex flex-col rounded-lg border border-gray-200 bg-white p-6">
+        <h3 class="text-lg font-semibold">Matrícula</h3>
+        <p class="mt-3 text-3xl font-bold">
+          5.000 <span class="text-base font-medium text-gray-500">CLP</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">Pago único de incorporación</p>
+        <ul class="mt-4 space-y-1 text-sm text-gray-700">
+          <li>Se paga una sola vez al ingresar.</li>
+          <li>Junto con la cuota de tu categoría activa tu acceso.</li>
+        </ul>
+      </div>
+
+      {# Estándar #}
+      <div class="flex flex-col rounded-lg border border-gray-200 bg-white p-6">
+        <h3 class="text-lg font-semibold">Membresía Estándar</h3>
+        <p class="mt-3 text-3xl font-bold">
+          5.000 <span class="text-base font-medium text-gray-500">CLP</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">Cuota mensual · opción de apoyo</p>
+        <ul class="mt-4 space-y-1 text-sm text-gray-700">
+          <li>Para quienes siguen ligados al club sin entrenar activamente.</li>
+          <li>Mantiene tu vínculo y tu estado de cuenta.</li>
+        </ul>
+      </div>
+
+      {# Activa (destacada) #}
+      <div class="relative flex flex-col rounded-lg border-2 border-marca-rojo bg-white p-6 shadow-sm">
+        <span class="absolute -top-3 left-6 rounded-full bg-marca-rojo px-3 py-1 text-xs font-semibold text-marca-blanco">
+          Alumnos
+        </span>
+        <h3 class="text-lg font-semibold">Membresía Activa</h3>
+        <p class="mt-3 text-3xl font-bold">
+          15.000 <span class="text-base font-medium text-gray-500">CLP</span>
+        </p>
+        <p class="mt-1 text-sm text-gray-500">Cuota mensual · entrenamiento activo</p>
+        <ul class="mt-4 space-y-1 text-sm text-gray-700">
+          <li>Cuota estándar para alumnos que entrenan activamente.</li>
+          <li>Acceso al sistema y a tu estado de cuenta.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ------------------- Sección 5: Cómo funciona --------------------- #}
+<section id="como-funciona" class="scroll-mt-20 bg-marca-blanco">
+  <div class="mx-auto max-w-3xl px-4 py-16" x-data="{ abierta: 0 }">
+    <h2 class="text-2xl font-bold md:text-3xl">Cómo funciona</h2>
+    <p class="mt-3 text-gray-700">Preguntas frecuentes sobre membresías y pagos.</p>
+
+    <div class="mt-8 divide-y divide-gray-200 border-y border-gray-200">
+      {# Pregunta 1 #}
+      <div>
+        <button type="button"
+                class="flex w-full items-center justify-between gap-4 py-4 text-left"
+                @click="abierta = (abierta === 1 ? null : 1)">
+          <span class="font-medium">¿Cómo me incorporo al club?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-marca-rojo transition-transform"
+               :class="abierta === 1 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <p class="pb-4 text-sm text-gray-700" x-show="abierta === 1" x-cloak>
+          Pagas la matrícula (5.000 CLP) más la cuota de tu categoría: Activa
+          (15.000 CLP) si entrenas activamente o Estándar (5.000 CLP) si
+          participas como apoyo. Con el pago inicial completo queda activo tu acceso.
+        </p>
+      </div>
+
+      {# Pregunta 2 #}
+      <div>
+        <button type="button"
+                class="flex w-full items-center justify-between gap-4 py-4 text-left"
+                @click="abierta = (abierta === 2 ? null : 2)">
+          <span class="font-medium">¿Cómo realizo mis pagos?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-marca-rojo transition-transform"
+               :class="abierta === 2 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <p class="pb-4 text-sm text-gray-700" x-show="abierta === 2" x-cloak>
+          Los pagos se realizan por transferencia a la cuenta del club, que
+          encuentras en la sección «Datos de transferencia». El efectivo se
+          admite únicamente como excepción.
+        </p>
+      </div>
+
+      {# Pregunta 3 #}
+      <div>
+        <button type="button"
+                class="flex w-full items-center justify-between gap-4 py-4 text-left"
+                @click="abierta = (abierta === 3 ? null : 3)">
+          <span class="font-medium">¿Cuándo cuenta mi pago para el mes en curso?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-marca-rojo transition-transform"
+               :class="abierta === 3 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <p class="pb-4 text-sm text-gray-700" x-show="abierta === 3" x-cloak>
+          Si el pago se realiza después del día 5 del mes, se aplica
+          automáticamente al siguiente ciclo mensual.
+        </p>
+      </div>
+
+      {# Pregunta 4 #}
+      <div>
+        <button type="button"
+                class="flex w-full items-center justify-between gap-4 py-4 text-left"
+                @click="abierta = (abierta === 4 ? null : 4)">
+          <span class="font-medium">¿Qué ocurre si no pago un mes?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-marca-rojo transition-transform"
+               :class="abierta === 4 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <p class="pb-4 text-sm text-gray-700" x-show="abierta === 4" x-cloak>
+          La cuota se acumula como deuda y tu estado pasa a «Moroso». Conservas
+          el acceso de consulta a tu estado de cuenta.
+        </p>
+      </div>
+
+      {# Pregunta 5 #}
+      <div>
+        <button type="button"
+                class="flex w-full items-center justify-between gap-4 py-4 text-left"
+                @click="abierta = (abierta === 5 ? null : 5)">
+          <span class="font-medium">¿Cómo se muestra la morosidad?</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 text-marca-rojo transition-transform"
+               :class="abierta === 5 ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <p class="pb-4 text-sm text-gray-700" x-show="abierta === 5" x-cloak>
+          En <span class="font-semibold text-morosidad-verde">verde</span> si
+          estás al día, en <span class="font-semibold text-morosidad-naranjo">naranjo</span>
+          si la deuda es de hasta 3 meses y en
+          <span class="font-semibold text-morosidad-rojo">rojo</span> si supera
+          los 3 meses.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# --------------- Sección 6: Datos de transferencia ---------------- #}
+<section id="transferencia" class="scroll-mt-20 bg-marca-negro text-marca-blanco">
+  <div class="mx-auto max-w-6xl px-4 py-16" x-data="{ modal: false }">
+    <h2 class="text-2xl font-bold md:text-3xl">Datos de transferencia</h2>
+    <p class="mt-3 max-w-2xl text-marca-blanco/80">
+      Realiza tus pagos por transferencia a la siguiente cuenta.
+    </p>
+
+    <dl class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <dt class="text-sm text-marca-blanco/60">Titular</dt>
+        <dd class="mt-1 text-lg font-medium">Olimpia Runners Osorno</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-marca-blanco/60">Banco</dt>
+        <dd class="mt-1 text-lg font-medium">Banco Santander</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-marca-blanco/60">Cuenta corriente</dt>
+        <dd class="mt-1 text-lg font-medium">72769929</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-marca-blanco/60">RUT</dt>
+        <dd class="mt-1 text-lg font-medium">65.161.804-5</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-marca-blanco/60">Correo</dt>
+        <dd class="mt-1 text-lg font-medium">tesoreriaor@gmail.com</dd>
+      </div>
+    </dl>
+
+    <p class="mt-6 max-w-2xl text-sm text-marca-blanco/60">
+      Nota: «Olimpia Runners Osorno» es el nombre con que está registrada la
+      cuenta; «Olimpia Runners» era el nombre anterior del club.
+    </p>
+
+    <button type="button"
+            class="mt-8 rounded bg-marca-rojo px-5 py-2.5 font-medium transition-colors hover:bg-red-700"
+            @click="modal = true">
+      Ver datos para copiar
+    </button>
+
+    {# Modal dinámico (Alpine.js) #}
+    <div x-show="modal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+         @keydown.escape.window="modal = false">
+      <div class="w-full max-w-md rounded-lg bg-marca-blanco p-6 text-marca-negro"
+           @click.outside="modal = false">
+        <div class="flex items-start justify-between">
+          <h3 class="text-lg font-semibold">Datos de transferencia</h3>
+          <button type="button" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar" @click="modal = false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <ul class="mt-4 space-y-2 text-sm">
+          <li><span class="text-gray-500">Titular:</span> Olimpia Runners Osorno</li>
+          <li><span class="text-gray-500">Banco:</span> Banco Santander</li>
+          <li><span class="text-gray-500">Cuenta corriente:</span> 72769929</li>
+          <li><span class="text-gray-500">RUT:</span> 65.161.804-5</li>
+          <li><span class="text-gray-500">Correo:</span> tesoreriaor@gmail.com</li>
+        </ul>
+        <button type="button"
+                class="mt-6 w-full rounded bg-marca-negro px-4 py-2 font-medium text-marca-blanco hover:bg-gray-800"
+                @click="modal = false">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------- Sección 7: Contacto ----------------------- #}
+{# Instagram y WhatsApp: valores provisionales por confirmar.        #}
+<section id="contacto" class="scroll-mt-20 bg-gray-50">
+  <div class="mx-auto max-w-6xl px-4 py-16">
+    <h2 class="text-2xl font-bold md:text-3xl">Contacto</h2>
+    <p class="mt-3 max-w-2xl text-gray-700">
+      ¿Tienes dudas sobre las membresías o los pagos? Escríbenos.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <a href="mailto:tesoreriaor@gmail.com"
+         class="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-marca-rojo">
+        <p class="text-sm text-gray-500">Correo</p>
+        <p class="mt-1 font-medium">tesoreriaor@gmail.com</p>
+      </a>
+
+      <a href="https://instagram.com/osornorunners" target="_blank" rel="noopener"
+         class="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-marca-rojo">
+        <p class="text-sm text-gray-500">Instagram</p>
+        <p class="mt-1 font-medium">@osornorunners</p>
+      </a>
+
+      <a href="#" class="rounded-lg border border-gray-200 bg-white p-5 transition-colors hover:border-marca-rojo">
+        <p class="text-sm text-gray-500">WhatsApp</p>
+        <p class="mt-1 font-medium">Por confirmar</p>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{# La sección 8 (Footer con el nombre oficial) la aporta el bloque "pie"    #}
+{# heredado de base.html, que muestra "{{ app_name }}".                     #}

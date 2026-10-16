@@ -158,11 +158,11 @@
 
 ### 4.B · Interfaz
 
-- [ ] **T4.7 · Landing page con las 8 secciones (UI-01)**
+- [x] **T4.7 · Landing page con las 8 secciones (UI-01)**
   - Subtareas: Header/Nav · Hero · Quiénes somos · Membresías (con precios 5.000/5.000/15.000) · Cómo funciona · Datos de transferencia · Contacto · Footer.
   - Verificación: la landing pública muestra las 8 secciones y es responsive.
   - Relación: F-28, UI-01, D-24.
-- [ ] **T4.8 · Interactividad de la landing con Alpine.js**
+- [x] **T4.8 · Interactividad de la landing con Alpine.js**
   - Qué: menú móvil, acordeón de "Cómo funciona" y modales.
   - Verificación: los componentes funcionan en escritorio y móvil.
   - Depende de: T2.7, T4.7.

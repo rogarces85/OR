@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.core.errores import registrar_manejadores
-from app.dependencies import templates
+from app.routers import landing
 
 settings = get_settings()
 
@@ -25,15 +24,7 @@ app.mount(
 )
 
 registrar_manejadores(app)
-
-
-@app.get("/", response_class=HTMLResponse)
-async def inicio(request: Request) -> HTMLResponse:
-    """Página de inicio provisional (la landing oficial llega en H2)."""
-    return templates.TemplateResponse(
-        request=request,
-        name="inicio.html",
-    )
+app.include_router(landing.router)
 
 
 @app.get("/salud")

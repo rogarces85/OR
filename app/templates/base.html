@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +8,12 @@
   <script defer src="{{ request.url_for('static', path='js/alpine.min.js') }}"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-marca-blanco text-marca-negro">
-  {% include "parciales/encabezado.html" %}
+  {% block encabezado %}{% include "parciales/encabezado.html" %}{% endblock %}
 
   <main class="flex-1">
     {% block contenido %}{% endblock %}
   </main>
 
-  {% include "parciales/pie.html" %}
+  {% block pie %}{% include "parciales/pie.html" %}{% endblock %}
 </body>
 </html>
