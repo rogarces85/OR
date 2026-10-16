@@ -50,34 +50,34 @@
 
 ## Fase 2 — Estructura base
 
-- [ ] **T2.1 · Crear el árbol de carpetas del proyecto**
+- [x] **T2.1 · Crear el árbol de carpetas del proyecto**
   - Qué: crear `app/` con `core`, `models`, `schemas`, `repositories`, `services`, `routers`, `templates`, `static` (y `tests/`), con `__init__.py` donde corresponda.
   - Verificación: el árbol coincide con `PLAN.md` §3.
-- [ ] **T2.2 · Crear la aplicación FastAPI (`app/main.py`)**
+- [x] **T2.2 · Crear la aplicación FastAPI (`app/main.py`)**
   - Qué: instanciar `FastAPI`, montar `/static`, configurar Jinja2 y registrar los routers.
   - Verificación: `uvicorn app.main:app --reload` levanta y responde en una ruta de prueba.
   - Depende de: T1.5, T2.1.
-- [ ] **T2.3 · Crear la capa de base de datos (`app/database.py`)**
+- [x] **T2.3 · Crear la capa de base de datos (`app/database.py`)**
   - Qué: engine MySQL, fábrica de sesiones, `Base` declarativa y dependencia `get_db`.
   - Verificación: una consulta trivial a la base funciona desde la app.
   - Depende de: T1.7.
-- [ ] **T2.4 · Definir el esquema inicial y su creación**
+- [x] **T2.4 · Definir el esquema inicial y su creación**
   - Qué: decidir y aplicar el mecanismo de creación de tablas (creación directa del esquema en el MVP; Alembic queda opcional).
   - Verificación: las tablas se crean en MySQL sin errores.
   - Relación: `PLAN.md` §9.
-- [ ] **T2.5 · Crear el layout base (`templates/base.html`)**
+- [x] **T2.5 · Crear el layout base (`templates/base.html`)**
   - Qué: estructura común con header, zona de contenido, footer con el nombre oficial y carga de CSS/Alpine.js.
   - Verificación: una página de prueba hereda del layout y muestra header y footer.
   - Relación: `PLAN.md` §8.
-- [ ] **T2.6 · Integrar el CSS compilado de Tailwind**
+- [x] **T2.6 · Integrar el CSS compilado de Tailwind**
   - Qué: enlazar el CSS generado en `base.html` y compilar tras cada cambio relevante.
   - Verificación: los estilos Tailwind se aplican en la página de prueba.
   - Depende de: T1.9, T2.5.
-- [ ] **T2.7 · Integrar Alpine.js**
+- [x] **T2.7 · Integrar Alpine.js**
   - Qué: cargar Alpine.js y crear un componente mínimo de prueba (por ejemplo, un toggle).
   - Verificación: el componente responde a la interacción en el navegador.
   - Relación: D-24.
-- [ ] **T2.8 · Ruta de salud y páginas de error base**
+- [x] **T2.8 · Ruta de salud y páginas de error base**
   - Qué: ruta `/salud` y plantillas base para 404 y 500.
   - Verificación: `/salud` responde y una URL inexistente muestra la página 404.
 
