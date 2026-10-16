@@ -10,39 +10,39 @@
 
 ## Fase 1 — Preparación y configuración
 
-- [ ] **T1.1 · Verificar el entorno de Python**
+- [x] **T1.1 · Verificar el entorno de Python**
   - Qué: confirmar que hay un intérprete Python 3.11 o superior y acceso a `pip`.
   - Verificación: `python --version` (o `py --version`) muestra 3.11+.
-- [ ] **T1.2 · Confirmar el stack congelado**
+- [x] **T1.2 · Confirmar el stack congelado**
   - Qué: dejar registrado en el `README` el stack definitivo (FastAPI + Jinja2 + HTML/CSS + Tailwind + Alpine.js + MySQL/MariaDB).
   - Verificación: el `README` lista el stack y coincide con `AGENT.md`.
-- [ ] **T1.3 · Preparar rama de trabajo en Git**
+- [x] **T1.3 · Preparar rama de trabajo en Git**
   - Qué: crear una rama de desarrollo (por ejemplo `feat/mvp`) y confirmar el commit base con `specs/`.
   - Verificación: `git status` limpio y `git branch` muestra la rama activa.
-- [ ] **T1.4 · Crear el entorno virtual e instalarlo**
+- [x] **T1.4 · Crear el entorno virtual e instalarlo**
   - Qué: crear `venv` en la raíz y activarlo.
   - Verificación: el prompt muestra el entorno activado y `pip list` responde.
-- [ ] **T1.5 · Definir `requirements.txt`**
+- [x] **T1.5 · Definir `requirements.txt`**
   - Qué: declarar dependencias: `fastapi`, `uvicorn[standard]`, `jinja2`, `sqlalchemy`, `pymysql`, `cryptography` (auth MySQL), `itsdangerous` (sesiones), `passlib[bcrypt]` (o `argon2-cffi`), `python-multipart` (formularios), `python-dotenv`/`pydantic-settings`, `openpyxl` (XLSX), `weasyprint`/`reportlab` (PDF), `pytest`, `ruff`.
   - Verificación: `pip install -r requirements.txt` termina sin errores.
   - Relación: `PLAN.md` §2.
-- [ ] **T1.6 · Crear el archivo `.env.example` y `app/config.py`**
+- [x] **T1.6 · Crear el archivo `.env.example` y `app/config.py`**
   - Qué: plantilla de variables (cadena de conexión MySQL, `SECRET_KEY`, entorno) y su carga tipada.
   - Verificación: la app lee la configuración sin credenciales en el código.
   - Relación: `PLAN.md` §9, §11.
-- [ ] **T1.7 · Crear la base de datos MySQL/MariaDB**
+- [x] **T1.7 · Crear la base de datos MySQL/MariaDB**
   - Qué: crear la base **`osorno_runners`** y el usuario en XAMPP; probar conexión.
   - Verificación: una conexión de prueba (`pymysql`) responde correctamente.
   - Relación: P-1, Q-4, `PLAN.md` §9.
-- [ ] **T1.8 · Confirmar la paleta oficial y los colores de morosidad**
+- [x] **T1.8 · Confirmar la paleta oficial y los colores de morosidad**
   - Qué: fijar los valores (hex) de **Rojo, Negro y Blanco** y de los estados de morosidad (**verde**, **naranjo**, **rojo**).
   - Verificación: `tailwind.config.js` incluye Rojo `red-600` (#DC2626), Negro `black` (#000000), Blanco `white` (#FFFFFF); morosidad verde `green-600` (#16A34A), naranjo `amber-500` (#F59E0B), rojo `red-500` (#EF4444).
   - Relación: F-29, F-22, D-17, Q-1.
-- [ ] **T1.9 · Configurar la compilación de Tailwind CSS**
+- [x] **T1.9 · Configurar la compilación de Tailwind CSS**
   - Qué: crear `package.json`, `tailwind.config.js` (paleta y rutas de plantillas) e `input.css`.
   - Verificación: `npx tailwindcss` genera un CSS de salida sin errores.
   - Relación: D-24, UI-10.
-- [ ] **T1.10 · Crear el `.gitignore`**
+- [x] **T1.10 · Crear el `.gitignore`**
   - Qué: excluir `venv`, `.env`, `__pycache__`, `node_modules`, CSS compilado y archivos temporales.
   - Verificación: `git status` no muestra esos artefactos.
 
