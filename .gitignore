@@ -1,0 +1,32 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Variables de entorno (secretos)
+.env
+
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Herramientas
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / Tailwind
+node_modules/
+npm-debug.log*
+
+# CSS compilado (se regenera con `npm run css:build`)
+app/static/css/app.css
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Registros
+*.log

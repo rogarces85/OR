@@ -1,0 +1,33 @@
+# Sistema Gestión Pagos Osorno Runners — dependencias del MVP
+# Instalar con:  pip install -r requirements.txt
+
+# --- Aplicación ---
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.32,<1.0
+jinja2>=3.1,<4.0
+python-multipart>=0.0.9
+
+# --- Persistencia (MySQL/MariaDB, P-1) ---
+sqlalchemy>=2.0,<3.0
+pymysql>=1.1,<2.0
+cryptography>=43,<47
+
+# --- Configuración y secretos ---
+pydantic-settings>=2.5,<3.0
+python-dotenv>=1.0,<2.0
+
+# --- Seguridad (Q-2) ---
+itsdangerous>=2.2,<3.0
+passlib[bcrypt]>=1.7,<2.0
+bcrypt>=4.0,<4.1
+
+# --- Validación ---
+email-validator>=2.2,<3.0
+
+# --- Exportación (P-3) ---
+openpyxl>=3.1,<4.0
+reportlab>=4.2,<5.0
+
+# --- Calidad y pruebas ---
+pytest>=8.3,<9.0
+ruff>=0.8,<1.0
