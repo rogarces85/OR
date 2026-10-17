@@ -11,6 +11,7 @@ from app.models.miembro import (
     ACTIVACION_PENDIENTE,
     CATEGORIA_ACTIVO,
     CONDICION_NORMAL,
+    HistorialCategoria,
     Miembro,
 )
 
@@ -103,3 +104,33 @@ def guardar(db: Session, miembro: Miembro) -> Miembro:
     db.commit()
     db.refresh(miembro)
     return miembro
+
+
+def crear_historial(
+    db: Session,
+    *,
+    miembro_id: int,
+    categoria_anterior: str,
+    categoria_nueva: str,
+    usuario_id: int | None = None,
+) -> HistorialCategoria:
+    """Registra un cambio de categoría del miembro (F-05, RN-25, D-26)."""
+    registro = HistorialCategoria(
+        miembro_id=miembro_id,
+        categoria_anterior=categoria_anterior,
+        categoria_nueva=categoria_nueva,
+        usuario_id=usuario_id,
+    )
+    db.add(registro)
+    return registro
+
+
+def listar_historial(db: Session, miembro_id: int) -> list[HistorialCategoria]:
+    """Lista los cambios de categoría de un miembro, del más reciente al más antiguo."""
+    return list(
+        db.scalars(
+            select(HistorialCategoria)
+            .where(HistorialCategoria.miembro_id == miembro_id)
+            .order_by(HistorialCategoria.fecha.desc(), HistorialCategoria.id.desc())
+        )
+    )

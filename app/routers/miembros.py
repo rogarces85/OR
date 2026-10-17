@@ -1,24 +1,112 @@
-"""Panel de gestión: listado y búsqueda de miembros con morosidad.
+"""Panel de gestión de miembros: listado, alta, edición, categoría y exenciones.
 
-Cubre T4.9 (shell del panel) y T5.2 (listado y búsqueda).
+Cubre T4.9 (shell del panel), T5.1 (alta), T5.2 (listado y búsqueda), T5.3
+(edición), T5.4 (cambio de categoría), T5.5 (activación de la membresía) y
+T5.10 (exención de cobros y avisos).
 """
 
 from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
-from app.core.seguridad import requiere_rol
+from app.core.formato import formatear_clp
+from app.core.seguridad import flash, requiere_rol, validar_csrf
 from app.dependencies import SesionBD, templates
-from app.models.miembro import CATEGORIA_ACTIVO, CATEGORIAS
+from app.models.miembro import (
+    CATEGORIA_ACTIVO,
+    CATEGORIA_MEMBRESIA,
+    CATEGORIAS,
+    MOTIVOS_EXENCION,
+    Miembro,
+)
 from app.models.usuario import ROLES_GESTION, Usuario
-from app.services.morosidad import listar_miembros_con_morosidad
+from app.repositories import membresia as repo_membresia
+from app.repositories import miembro as repo_miembro
+from app.repositories import pago as repo_pago
+from app.schemas.miembro import ETIQUETAS_CAMPO, MiembroEntrada, mensajes_por_campo
+from app.services import activacion as servicio_activacion
+from app.services import membresias as servicio_membresias
+from app.services.morosidad import calcular_morosidad, listar_miembros_con_morosidad
 
 router = APIRouter(tags=["miembros"])
 
 ETIQUETAS_SITUACION = {"pendiente": "Pendiente", "activo": "Activo"}
+ETIQUETAS_CATEGORIA = {
+    CATEGORIA_ACTIVO: "Activo (alumno)",
+    CATEGORIA_MEMBRESIA: "Membresía (apoyo)",
+}
+
+
+def _redirigir(destino: str) -> RedirectResponse:
+    """Redirección 303 típica después de un POST (patrón POST-Redirect-GET)."""
+    return RedirectResponse(destino, status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _csrf_ok(request: Request, token: str) -> bool:
+    """Valida el token CSRF y deja un aviso si no es válido (F-02, T4.5)."""
+    if validar_csrf(request, token):
+        return True
+    flash(request, "error", "Tu sesión expiró. Inténtalo nuevamente.")
+    return False
+
+
+def _datos_ficha(
+    *,
+    nombre_completo: str,
+    email: str,
+    telefono: str,
+    rut: str,
+    fecha_nacimiento: str,
+    direccion: str,
+    contacto_emergencia: str,
+) -> dict[str, str]:
+    """Arma el diccionario de la ficha ampliada recibido del formulario (D-6)."""
+    return {
+        "nombre_completo": nombre_completo,
+        "email": email,
+        "telefono": telefono,
+        "rut": rut,
+        "fecha_nacimiento": fecha_nacimiento,
+        "direccion": direccion,
+        "contacto_emergencia": contacto_emergencia,
+    }
+
+
+def _validar_ficha(datos: dict[str, str]) -> tuple[MiembroEntrada | None, dict[str, str]]:
+    """Valida la ficha y devuelve la entrada junto con los errores por campo."""
+    try:
+        return MiembroEntrada(**datos), {}
+    except ValidationError as exc:
+        return None, mensajes_por_campo(exc)
+
+
+def _resumen_errores(errores: dict[str, str]) -> str:
+    """Une los errores por campo en un mensaje legible (CA-16)."""
+    return " ".join(
+        f"{ETIQUETAS_CAMPO.get(campo, campo)}: {texto}"
+        for campo, texto in errores.items()
+    )
+
+
+def _obtener_miembro(db: Session, miembro_id: int) -> Miembro:
+    """Devuelve el miembro o responde 404 si no existe."""
+    miembro = repo_miembro.obtener(db, miembro_id)
+    if miembro is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El miembro indicado no existe.",
+        )
+    return miembro
+
+
+# --------------------------------------------------------------------------- #
+# Listado (T5.2)
+# --------------------------------------------------------------------------- #
 
 
 @router.get("/miembros", response_class=HTMLResponse)
@@ -56,3 +144,300 @@ async def listar_miembros(
             "total": len(filas),
         },
     )
+
+
+# --------------------------------------------------------------------------- #
+# Alta de miembro (T5.1)
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/miembros/nuevo", response_class=HTMLResponse)
+async def mostrar_alta(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+) -> HTMLResponse:
+    """Muestra el formulario de alta con la ficha ampliada del miembro (T5.1)."""
+    return templates.TemplateResponse(
+        request=request,
+        name="miembros/formulario.html",
+        context={
+            "accion": "/miembros/nuevo",
+            "titulo": "Nuevo miembro",
+            "datos": {},
+            "errores": {},
+            "categorias": CATEGORIAS,
+            "categoria": CATEGORIA_ACTIVO,
+        },
+    )
+
+
+@router.post("/miembros/nuevo", response_class=HTMLResponse, response_model=None)
+async def crear_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    csrf_token: str = Form(""),
+    nombre_completo: str = Form(""),
+    email: str = Form(""),
+    telefono: str = Form(""),
+    rut: str = Form(""),
+    fecha_nacimiento: str = Form(""),
+    direccion: str = Form(""),
+    contacto_emergencia: str = Form(""),
+    categoria: str = Form(CATEGORIA_ACTIVO),
+) -> HTMLResponse | RedirectResponse:
+    """Registra un miembro nuevo y su obligación inicial (F-01, Flujo 1, CA-16)."""
+    datos = _datos_ficha(
+        nombre_completo=nombre_completo,
+        email=email,
+        telefono=telefono,
+        rut=rut,
+        fecha_nacimiento=fecha_nacimiento,
+        direccion=direccion,
+        contacto_emergencia=contacto_emergencia,
+    )
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir("/miembros/nuevo")
+
+    entrada, errores = _validar_ficha(datos)
+    if categoria not in CATEGORIAS:
+        errores["categoria"] = "Selecciona una categoría válida."
+    if entrada is not None and repo_miembro.obtener_por_email(
+        db, str(entrada.email)
+    ) is not None:
+        # El correo es el identificador único del miembro (RN-11, CA-16).
+        errores["email"] = "Ya existe un miembro registrado con este correo electrónico."
+
+    if entrada is None or errores:
+        return templates.TemplateResponse(
+            request=request,
+            name="miembros/formulario.html",
+            context={
+                "accion": "/miembros/nuevo",
+                "titulo": "Nuevo miembro",
+                "datos": datos,
+                "errores": errores,
+                "categorias": CATEGORIAS,
+                "categoria": categoria,
+                "mensajes": [
+                    {
+                        "tipo": "error",
+                        "texto": "No se pudo registrar el miembro. "
+                        + _resumen_errores(errores),
+                    }
+                ],
+            },
+        )
+
+    miembro = servicio_membresias.crear_miembro(
+        db,
+        nombre_completo=entrada.nombre_completo,
+        email=str(entrada.email),
+        telefono=entrada.telefono,
+        rut=entrada.rut,
+        fecha_nacimiento=entrada.fecha_nacimiento,
+        direccion=entrada.direccion,
+        contacto_emergencia=entrada.contacto_emergencia,
+        categoria=categoria,
+        usuario_id=usuario.id,
+    )
+    flash(
+        request,
+        "ok",
+        f"Miembro {miembro.nombre_completo} registrado. Queda pendiente hasta "
+        "completar el pago inicial (Matrícula + la cuota de su categoría).",
+    )
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+# --------------------------------------------------------------------------- #
+# Ficha, activación, categoría y exención (T5.3, T5.4, T5.5, T5.10)
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/miembros/{miembro_id}", response_class=HTMLResponse)
+async def ver_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+) -> HTMLResponse:
+    """Muestra la ficha, la activación, la categoría y las cuotas del miembro."""
+    miembro = _obtener_miembro(db, miembro_id)
+    cuotas = repo_membresia.cuotas_de_miembro(db, miembro.id)
+    cuotas_mensuales = repo_membresia.cuotas_mensuales_de_miembro(db, miembro.id)
+    return templates.TemplateResponse(
+        request=request,
+        name="miembros/detalle.html",
+        context={
+            "miembro": miembro,
+            "cuotas": cuotas,
+            "informacion": calcular_morosidad(miembro, cuotas_mensuales),
+            "estado_activacion": servicio_activacion.evaluar_activacion(db, miembro),
+            "historial": repo_miembro.listar_historial(db, miembro.id),
+            "saldo_a_favor": repo_pago.saldo_a_favor(db, miembro.id),
+            "motivos_exencion": MOTIVOS_EXENCION,
+            "categorias": CATEGORIAS,
+            "etiquetas_categoria": ETIQUETAS_CATEGORIA,
+        },
+    )
+
+
+@router.post("/miembros/{miembro_id}/editar", response_model=None)
+async def editar_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+    nombre_completo: str = Form(""),
+    email: str = Form(""),
+    telefono: str = Form(""),
+    rut: str = Form(""),
+    fecha_nacimiento: str = Form(""),
+    direccion: str = Form(""),
+    contacto_emergencia: str = Form(""),
+) -> RedirectResponse:
+    """Modifica la ficha del miembro sin alterar su historial (T5.3)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    datos = _datos_ficha(
+        nombre_completo=nombre_completo,
+        email=email,
+        telefono=telefono,
+        rut=rut,
+        fecha_nacimiento=fecha_nacimiento,
+        direccion=direccion,
+        contacto_emergencia=contacto_emergencia,
+    )
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+
+    entrada, errores = _validar_ficha(datos)
+    if entrada is not None:
+        existente = repo_miembro.obtener_por_email(db, str(entrada.email))
+        if existente is not None and existente.id != miembro.id:
+            errores["email"] = (
+                "Ya existe otro miembro registrado con este correo electrónico."
+            )
+    if entrada is None or errores:
+        flash(
+            request,
+            "error",
+            "No se guardaron los cambios. " + _resumen_errores(errores),
+        )
+        return _redirigir(f"/miembros/{miembro.id}")
+
+    servicio_membresias.editar_miembro(
+        db,
+        miembro,
+        nombre_completo=entrada.nombre_completo,
+        email=str(entrada.email),
+        telefono=entrada.telefono,
+        rut=entrada.rut,
+        fecha_nacimiento=entrada.fecha_nacimiento,
+        direccion=entrada.direccion,
+        contacto_emergencia=entrada.contacto_emergencia,
+    )
+    flash(request, "ok", "Datos del miembro actualizados.")
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+@router.post("/miembros/{miembro_id}/categoria", response_model=None)
+async def cambiar_categoria_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+    categoria: str = Form(""),
+) -> RedirectResponse:
+    """Cambia la categoría del miembro, registra el cambio y ajusta la cuota (T5.4)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    try:
+        registro = servicio_membresias.cambiar_categoria(db, miembro, categoria, usuario)
+    except ValueError as exc:
+        flash(request, "error", str(exc))
+    else:
+        etiqueta = ETIQUETAS_CATEGORIA.get(registro.categoria_nueva, categoria)
+        flash(
+            request,
+            "ok",
+            f"Categoría actualizada a {etiqueta}; la cuota mensual quedó ajustada.",
+        )
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+@router.post("/miembros/{miembro_id}/activar", response_model=None)
+async def activar_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+) -> RedirectResponse:
+    """Evalúa el pago inicial y activa al miembro si está completo (T5.5, CA-01)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    estado = servicio_activacion.evaluar_activacion(db, miembro)
+    if estado.completo:
+        servicio_activacion.aplicar_activacion(db, miembro)
+        flash(
+            request,
+            "ok",
+            "El pago inicial está completo: la membresía quedó activa.",
+        )
+    else:
+        flash(
+            request,
+            "error",
+            "El pago inicial está incompleto: falta "
+            f"$ {formatear_clp(estado.saldo_clp)}. El miembro sigue pendiente.",
+        )
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+@router.post("/miembros/{miembro_id}/exencion", response_model=None)
+async def marcar_exencion_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+    motivo: str = Form(""),
+) -> RedirectResponse:
+    """Exime al miembro de cobros y avisos, dejando su cuota como exenta (T5.10)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    try:
+        servicio_membresias.marcar_exencion(db, miembro, motivo)
+    except ValueError as exc:
+        flash(request, "error", str(exc))
+    else:
+        flash(
+            request,
+            "ok",
+            f"Miembro exento por {motivo}: no se generarán cobros ni avisos (RN-05).",
+        )
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+@router.post("/miembros/{miembro_id}/exencion/quitar", response_model=None)
+async def quitar_exencion_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+) -> RedirectResponse:
+    """Devuelve al miembro a la condición normal, reincorporándolo al ciclo (T5.10)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    servicio_membresias.quitar_exencion(db, miembro)
+    flash(request, "ok", "Exención retirada: el miembro vuelve al ciclo de cobro.")
+    return _redirigir(f"/miembros/{miembro.id}")

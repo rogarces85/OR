@@ -6,11 +6,19 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.membresia import (
+    ESTADO_EXENTA,
     ESTADO_PENDIENTE,
+    NIVEL_ACTIVA,
+    NIVEL_MATRICULA,
+    NIVEL_POR_CATEGORIA,
+    TIPO_MENSUAL,
     CuotaMensual,
     NegociacionDeuda,
     NivelCuota,
 )
+
+# Estados en los que una cuota todavía puede ajustarse por cambio de categoría.
+ESTADOS_AJUSTABLES: tuple[str, ...] = (ESTADO_PENDIENTE, "parcial")
 
 
 def listar_niveles(db: Session, *, solo_activos: bool = True) -> list[NivelCuota]:
@@ -26,24 +34,51 @@ def obtener_nivel_por_codigo(db: Session, codigo: str) -> NivelCuota | None:
     return db.scalar(select(NivelCuota).where(NivelCuota.codigo == codigo))
 
 
-def cuotas_de_miembro(
-    db: Session, miembro_id: int, *, desde_anio: int | None = None
-) -> list[CuotaMensual]:
-    """Lista las cuotas de un miembro, de la más antigua a la más reciente."""
-    consulta = (
-        select(CuotaMensual)
-        .where(CuotaMensual.miembro_id == miembro_id)
-        .order_by(CuotaMensual.anio, CuotaMensual.mes)
+def nivel_de_categoria(db: Session, categoria: str) -> NivelCuota | None:
+    """Devuelve el nivel de cuota mensual que corresponde a una categoría (RN-01)."""
+    codigo = NIVEL_POR_CATEGORIA.get(categoria, NIVEL_ACTIVA)
+    return obtener_nivel_por_codigo(db, codigo)
+
+
+def nivel_matricula(db: Session) -> NivelCuota | None:
+    """Devuelve el nivel de la Matrícula (pago único de incorporación)."""
+    return obtener_nivel_por_codigo(db, NIVEL_MATRICULA)
+
+
+def cuotas_de_miembro(db: Session, miembro_id: int) -> list[CuotaMensual]:
+    """Lista todas las cuotas de un miembro (incluida la Matrícula)."""
+    return list(
+        db.scalars(
+            select(CuotaMensual)
+            .where(CuotaMensual.miembro_id == miembro_id)
+            .order_by(CuotaMensual.anio, CuotaMensual.mes, CuotaMensual.nivel_cuota_id)
+        )
     )
-    if desde_anio is not None:
-        consulta = consulta.where(CuotaMensual.anio >= desde_anio)
-    return list(db.scalars(consulta))
+
+
+def cuotas_mensuales_de_miembro(db: Session, miembro_id: int) -> list[CuotaMensual]:
+    """Lista solo las **cuotas mensuales** de un miembro (excluye la Matrícula)."""
+    return list(
+        db.scalars(
+            select(CuotaMensual)
+            .join(NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id)
+            .where(
+                CuotaMensual.miembro_id == miembro_id,
+                NivelCuota.tipo == TIPO_MENSUAL,
+            )
+            .order_by(CuotaMensual.anio, CuotaMensual.mes)
+        )
+    )
 
 
 def cuotas_por_miembros(
-    db: Session, miembros_ids: list[int]
+    db: Session, miembros_ids: list[int], *, solo_mensuales: bool = False
 ) -> dict[int, list[CuotaMensual]]:
-    """Agrupa las cuotas de varios miembros en una sola consulta (evita N+1)."""
+    """Agrupa las cuotas de varios miembros en una sola consulta (evita N+1).
+
+    Con ``solo_mensuales=True`` excluye la Matrícula, como requiere el cálculo de
+    morosidad (la mora aplica a las cuotas mensuales; ver F-11 y RN-04).
+    """
     agrupadas: dict[int, list[CuotaMensual]] = {mid: [] for mid in miembros_ids}
     if not miembros_ids:
         return agrupadas
@@ -52,20 +87,60 @@ def cuotas_por_miembros(
         .where(CuotaMensual.miembro_id.in_(miembros_ids))
         .order_by(CuotaMensual.miembro_id, CuotaMensual.anio, CuotaMensual.mes)
     )
+    if solo_mensuales:
+        consulta = consulta.join(
+            NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id
+        ).where(NivelCuota.tipo == TIPO_MENSUAL)
     for cuota in db.scalars(consulta):
         agrupadas.setdefault(cuota.miembro_id, []).append(cuota)
     return agrupadas
 
 
+def listar_por_periodo(db: Session, anio: int, mes: int) -> list[CuotaMensual]:
+    """Lista las cuotas de un periodo concreto (para la generación mensual)."""
+    return list(
+        db.scalars(
+            select(CuotaMensual)
+            .where(CuotaMensual.anio == anio, CuotaMensual.mes == mes)
+            .order_by(CuotaMensual.miembro_id)
+        )
+    )
+
+
 def obtener_cuota(
-    db: Session, miembro_id: int, anio: int, mes: int
+    db: Session,
+    miembro_id: int,
+    anio: int,
+    mes: int,
+    nivel_cuota_id: int | None = None,
 ) -> CuotaMensual | None:
-    """Busca la cuota de un miembro para un periodo concreto."""
-    return db.scalar(
-        select(CuotaMensual).where(
-            CuotaMensual.miembro_id == miembro_id,
-            CuotaMensual.anio == anio,
-            CuotaMensual.mes == mes,
+    """Busca la cuota de un miembro para un periodo (y nivel, si se indica)."""
+    consulta = select(CuotaMensual).where(
+        CuotaMensual.miembro_id == miembro_id,
+        CuotaMensual.anio == anio,
+        CuotaMensual.mes == mes,
+    )
+    if nivel_cuota_id is not None:
+        consulta = consulta.where(CuotaMensual.nivel_cuota_id == nivel_cuota_id)
+    return db.scalar(consulta)
+
+
+def cuotas_ajustables_desde(
+    db: Session, miembro_id: int, anio: int, mes: int
+) -> list[CuotaMensual]:
+    """Cuotas mensuales no pagadas de un miembro desde un periodo (RN-25)."""
+    return list(
+        db.scalars(
+            select(CuotaMensual)
+            .join(NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id)
+            .where(
+                CuotaMensual.miembro_id == miembro_id,
+                NivelCuota.tipo == TIPO_MENSUAL,
+                CuotaMensual.estado.in_(ESTADOS_AJUSTABLES),
+                (CuotaMensual.anio > anio)
+                | ((CuotaMensual.anio == anio) & (CuotaMensual.mes >= mes)),
+            )
+            .order_by(CuotaMensual.anio, CuotaMensual.mes)
         )
     )
 
@@ -91,6 +166,14 @@ def crear_cuota(
         monto_pagado_clp=monto_pagado_clp,
         estado=estado,
     )
+    db.add(cuota)
+    return cuota
+
+
+def marcar_exenta(db: Session, cuota: CuotaMensual) -> CuotaMensual:
+    """Deja una cuota como **exenta** (sin deuda) al eximir al miembro (RN-05)."""
+    cuota.estado = ESTADO_EXENTA
+    cuota.monto_pagado_clp = 0
     db.add(cuota)
     return cuota
 

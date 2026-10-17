@@ -6,7 +6,13 @@
 {% block panel %}
 <div class="flex flex-wrap items-baseline justify-between gap-2">
   <h1 class="text-2xl font-bold">Miembros</h1>
-  <p class="text-sm text-gray-500">{{ total }} miembro{{ "" if total == 1 else "s" }}</p>
+  <div class="flex items-center gap-4">
+    <p class="text-sm text-gray-500">{{ total }} miembro{{ "" if total == 1 else "s" }}</p>
+    <a href="/miembros/nuevo"
+       class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+      Nuevo miembro
+    </a>
+  </div>
 </div>
 
 {# Filtros del listado (T5.2). #}
@@ -82,7 +88,9 @@
       {% for miembro, info in filas %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3">
-            <p class="font-medium">{{ miembro.nombre_completo }}</p>
+            <a href="/miembros/{{ miembro.id }}" class="font-medium hover:text-marca-rojo">
+              {{ miembro.nombre_completo }}
+            </a>
             <p class="text-xs text-gray-500">{{ miembro.email }}</p>
           </td>
           <td class="px-4 py-3">

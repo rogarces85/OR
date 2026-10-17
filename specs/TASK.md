@@ -194,21 +194,21 @@
 
 ### 5.A · Miembros (F-01, F-04, F-05)
 
-- [ ] **T5.1 · Alta de miembro**
+- [x] **T5.1 · Alta de miembro**
   - Qué: formulario y validación de la ficha ampliada; captura automática de `fecha_incorporacion` como fecha de alta.
   - Verificación: se crea un miembro completo y la fecha de incorporación queda registrada (CA-16).
   - Relación: F-01, RN-11, RN-14, D-3, D-6.
 - [x] **T5.2 · Listado y búsqueda de miembros**
   - Qué: listado con búsqueda/filtro (por estado, categoría, morosidad).
   - Verificación: el listado muestra los miembros y los filtros devuelven resultados coherentes.
-- [ ] **T5.3 · Edición de datos del miembro**
+- [x] **T5.3 · Edición de datos del miembro**
   - Qué: modificar datos de la ficha ampliada sin alterar el historial.
   - Verificación: los cambios se reflejan y se validan.
-- [ ] **T5.4 · Cambio de categoría con historial (Activo ↔ Membresía)**
+- [x] **T5.4 · Cambio de categoría con historial (Activo ↔ Membresía)**
   - Qué: cambiar categoría entre Activo y Membresía, registrando el cambio y ajustando la cuota mensual.
   - Verificación: el historial registra el cambio y la cuota se ajusta (CA-29).
   - Relación: F-05, RN-25, D-26.
-- [ ] **T5.5 · Activación de membresía**
+- [x] **T5.5 · Activación de membresía**
   - Qué: evaluar el pago inicial (Matrícula + cuota de la categoría) y activar al miembro.
   - Verificación: con pago parcial queda pendiente; con pago completo queda activo (CA-01).
   - Relación: F-07, RN-02, D-11.
@@ -219,19 +219,19 @@
 
 ### 5.B · Membresías y cuotas (F-06, F-09, F-10)
 
-- [ ] **T5.7 · Administración del catálogo de cuotas**
+- [x] **T5.7 · Administración del catálogo de cuotas**
   - Qué: vista de los tres niveles con sus montos (5.000 / 5.000 / 15.000).
   - Verificación: el catálogo coincide con RN-01 (CA-02).
   - Relación: F-06, RN-01.
-- [ ] **T5.8 · Generación de cuotas mensuales**
+- [x] **T5.8 · Generación de cuotas mensuales**
   - Qué: crear las cuotas del periodo para miembros activos y no exentos, según su categoría.
   - Verificación: al generar un periodo, cada miembro activo/no exento recibe su cuota del monto correcto.
   - Relación: F-10, RN-12.
-- [ ] **T5.9 · Regla del corte al día 5**
+- [x] **T5.9 · Regla del corte al día 5**
   - Qué: imputar al ciclo siguiente el pago realizado después del día 5.
   - Verificación: un pago posterior al día 5 queda imputado al siguiente ciclo (CA-04).
   - Relación: F-10, RN-03.
-- [ ] **T5.10 · Manejo de exenciones**
+- [x] **T5.10 · Manejo de exenciones**
   - Qué: marcar/quitar exención (becado, invitado/influencer, retirado) y excluir de cobros y avisos.
   - Verificación: un miembro exento no genera cuota ni avisos y su cuota se muestra exenta (CA-03).
   - Relación: F-09, RN-05.

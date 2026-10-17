@@ -11,7 +11,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 
 from app.models.membresia import ESTADO_EXENTA, ESTADO_PAGADA, CuotaMensual
-from app.models.miembro import Miembro
+from app.models.miembro import ACTIVACION_ACTIVO, Miembro
 from app.repositories import membresia as repo_membresia
 from app.repositories import miembro as repo_miembro
 
@@ -59,7 +59,20 @@ def calcular_morosidad(
     cuotas: list[CuotaMensual],
     referencia: date | None = None,
 ) -> MorosidadInfo:
-    """Calcula meses y monto de deuda considerando solo meses cerrados (P-5)."""
+    """Calcula meses y monto de deuda considerando solo meses cerrados (P-5).
+
+    Solo se consideran **cuotas mensuales** (la Matrícula es un cargo único de
+    incorporación, no una cuota del ciclo) y **miembros con la membresía activa**,
+    porque el ciclo de cobro mensual aplica a los miembros activos y no exentos
+    (F-10). Las cuotas exentas no generan deuda (RN-05).
+    """
+    if miembro.situacion_activacion != ACTIVACION_ACTIVO:
+        return MorosidadInfo(
+            miembro_id=miembro.id,
+            meses_deuda=0,
+            monto_deuda_clp=0,
+            color=COLOR_VERDE,
+        )
     fecha_referencia = referencia or date.today()
     meses_deuda = 0
     monto_deuda = 0
@@ -92,6 +105,8 @@ def listar_miembros_con_morosidad(
 ) -> list[tuple[Miembro, MorosidadInfo]]:
     """Lista miembros con su morosidad calculada, aplicando filtros (T5.2).
 
+    Solo se consideran las cuotas mensuales (no la Matrícula), conforme a F-11.
+
     Nota: el efecto de la negociación aceptada (P-6) se aplicará cuando se
     implemente el módulo de negociación (Fase 5.E); en el MVP Nivel B no hay
     negociaciones registradas.
@@ -100,7 +115,7 @@ def listar_miembros_con_morosidad(
         db, texto=texto, categoria=categoria, situacion=situacion
     )
     cuotas_por_miembro = repo_membresia.cuotas_por_miembros(
-        db, [miembro.id for miembro in miembros]
+        db, [miembro.id for miembro in miembros], solo_mensuales=True
     )
     filas: list[tuple[Miembro, MorosidadInfo]] = []
     for miembro in miembros:

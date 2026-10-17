@@ -46,6 +46,7 @@ from app.repositories import finanzas as repo_finanzas
 from app.repositories import membresia as repo_membresia
 from app.repositories import miembro as repo_miembro
 from app.repositories import usuario as repo_usuario
+from app.services import activacion as servicio_activacion
 
 # --- Catálogos de la semilla ------------------------------------------------- #
 
@@ -150,7 +151,7 @@ def _asegurar_cuota(
     monto: int,
     estado: str,
 ) -> None:
-    if repo_membresia.obtener_cuota(db, miembro_id, anio, mes) is not None:
+    if repo_membresia.obtener_cuota(db, miembro_id, anio, mes, nivel_id) is not None:
         return
     repo_membresia.crear_cuota(
         db,
@@ -162,6 +163,38 @@ def _asegurar_cuota(
         monto_pagado_clp=monto if estado == ESTADO_PAGADA else 0,
         estado=estado,
     )
+    # La sesión no usa autoflush: se confirma la cuota para que las búsquedas
+    # siguientes (por ejemplo, la obligación inicial) la encuentren.
+    db.flush()
+
+
+def _asegurar_obligacion_inicial(
+    db: Session,
+    *,
+    miembro: Any,
+    niveles: dict[str, NivelCuota],
+    estado_matricula: str,
+) -> None:
+    """Crea la obligación inicial (Matrícula + cuota de la categoría; Flujo 1).
+
+    Deja la Matrícula en el estado indicado para que la semilla refleje el caso de
+    un miembro que ya pagó su incorporación, uno exento y uno pendiente.
+    """
+    servicio_activacion.registrar_obligacion_inicial(db, miembro)
+    matricula = repo_membresia.obtener_cuota(
+        db,
+        miembro.id,
+        miembro.fecha_incorporacion.year,
+        miembro.fecha_incorporacion.month,
+        niveles[NIVEL_MATRICULA].id,
+    )
+    if matricula is None or matricula.estado == estado_matricula:
+        return
+    matricula.estado = estado_matricula
+    matricula.monto_pagado_clp = (
+        matricula.monto_clp if estado_matricula == ESTADO_PAGADA else 0
+    )
+    db.add(matricula)
 
 
 def _asegurar_miembro(db: Session, **datos: Any):
@@ -180,6 +213,9 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
     estandar = niveles[NIVEL_ESTANDAR]
     periodos = _periodos_cerrados(MESES_SEMILLA, hoy)
     mes_actual = (hoy.year, hoy.month)
+    # Los miembros de ejemplo se incorporaron al comenzar la ventana de meses cerrados.
+    anio_inc, mes_inc = periodos[0]
+    fecha_incorporacion = date(anio_inc, mes_inc, 1)
 
     # Ana: al día (todas las cuotas cerradas pagadas).
     ana = _asegurar_miembro(
@@ -191,6 +227,7 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
         categoria=CATEGORIA_ACTIVO,
         situacion_activacion=ACTIVACION_ACTIVO,
         condicion_especial=CONDICION_NORMAL,
+        fecha_incorporacion=fecha_incorporacion,
         usuario_id=repo_usuario.obtener_por_email(
             db, "ana.saldivar@example.com"
         ).id,
@@ -202,6 +239,9 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
             monto=activa.monto_clp,
             estado=ESTADO_PAGADA if pagada else ESTADO_PENDIENTE,
         )
+    _asegurar_obligacion_inicial(
+        db, miembro=ana, niveles=niveles, estado_matricula=ESTADO_PAGADA
+    )
 
     # Bruno: 2 meses cerrados impagos -> naranjo.
     bruno = _asegurar_miembro(
@@ -213,6 +253,7 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
         categoria=CATEGORIA_ACTIVO,
         situacion_activacion=ACTIVACION_ACTIVO,
         condicion_especial=CONDICION_NORMAL,
+        fecha_incorporacion=fecha_incorporacion,
     )
     impagos_bruno = set(periodos[-2:])
     for anio, mes in [*periodos, mes_actual]:
@@ -222,6 +263,9 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
             monto=activa.monto_clp,
             estado=ESTADO_PENDIENTE if impago else ESTADO_PAGADA,
         )
+    _asegurar_obligacion_inicial(
+        db, miembro=bruno, niveles=niveles, estado_matricula=ESTADO_PAGADA
+    )
 
     # Carla: 5 meses cerrados impagos -> rojo.
     carla = _asegurar_miembro(
@@ -233,6 +277,7 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
         categoria=CATEGORIA_ACTIVO,
         situacion_activacion=ACTIVACION_ACTIVO,
         condicion_especial=CONDICION_NORMAL,
+        fecha_incorporacion=fecha_incorporacion,
     )
     impagos_carla = set(periodos[-5:])
     for anio, mes in [*periodos, mes_actual]:
@@ -242,6 +287,9 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
             monto=activa.monto_clp,
             estado=ESTADO_PENDIENTE if impago else ESTADO_PAGADA,
         )
+    _asegurar_obligacion_inicial(
+        db, miembro=carla, niveles=niveles, estado_matricula=ESTADO_PAGADA
+    )
 
     # Diego: miembro de apoyo exento (no genera cobros ni avisos).
     diego = _asegurar_miembro(
@@ -254,15 +302,19 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
         situacion_activacion=ACTIVACION_ACTIVO,
         condicion_especial=CONDICION_EXENTO,
         motivo_exencion="Becado",
+        fecha_incorporacion=fecha_incorporacion,
     )
     for anio, mes in [*periodos, mes_actual]:
         _asegurar_cuota(
             db, miembro_id=diego.id, nivel_id=estandar.id, anio=anio, mes=mes,
             monto=estandar.monto_clp, estado=ESTADO_EXENTA,
         )
+    _asegurar_obligacion_inicial(
+        db, miembro=diego, niveles=niveles, estado_matricula=ESTADO_EXENTA
+    )
 
-    # Elena: incorporación pendiente del pago inicial (aún sin cuotas).
-    _asegurar_miembro(
+    # Elena: incorporación pendiente del pago inicial (obligación inicial impaga).
+    elena = _asegurar_miembro(
         db,
         nombre_completo="Elena Pendiente",
         email="elena.pendiente@example.com",
@@ -271,6 +323,9 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
         categoria=CATEGORIA_ACTIVO,
         situacion_activacion=ACTIVACION_PENDIENTE,
         condicion_especial=CONDICION_NORMAL,
+    )
+    _asegurar_obligacion_inicial(
+        db, miembro=elena, niveles=niveles, estado_matricula=ESTADO_PENDIENTE
     )
 
     # Una compra del club con un cargo separado a un alumno (RN-23).

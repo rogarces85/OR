@@ -11,6 +11,7 @@ from sqlalchemy import Date, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from app.models.miembro import CATEGORIA_ACTIVO, CATEGORIA_MEMBRESIA
 
 # Códigos del catálogo de cuotas (F-06, RN-01).
 NIVEL_MATRICULA = "matricula"
@@ -19,6 +20,14 @@ NIVEL_ACTIVA = "activa"
 
 TIPO_UNICO = "unico"
 TIPO_MENSUAL = "mensual"
+
+# Categoría del miembro -> código del nivel de cuota mensual que le corresponde
+# (RN-01, D-2, D-11): los alumnos (Activo) tributan Membresía Activa y los
+# miembros de apoyo (Membresía) tributan Membresía Estándar.
+NIVEL_POR_CATEGORIA: dict[str, str] = {
+    CATEGORIA_ACTIVO: NIVEL_ACTIVA,
+    CATEGORIA_MEMBRESIA: NIVEL_ESTANDAR,
+}
 
 # Estados de una cuota mensual.
 ESTADO_PENDIENTE = "pendiente"
@@ -55,12 +64,22 @@ class NivelCuota(Base):
 
 
 class CuotaMensual(Base):
-    """Cuota de un miembro para un periodo (año/mes) con su estado de pago."""
+    """Cuota o cargo de un miembro para un periodo (año/mes) con su estado de pago.
+
+    Aloja tanto la **cuota mensual** como la **Matrícula** (nivel ``tipo=unico``),
+    porque la obligación inicial del Flujo 1 es *Matrícula + la cuota de la
+    categoría* y ambas corresponden al mes de incorporación. Por eso la unicidad
+    se define por (miembro, año, mes, nivel) y no solo por periodo.
+    """
 
     __tablename__ = "cuotas_mensuales"
     __table_args__ = (
         UniqueConstraint(
-            "miembro_id", "anio", "mes", name="uq_cuota_miembro_periodo"
+            "miembro_id",
+            "anio",
+            "mes",
+            "nivel_cuota_id",
+            name="uq_cuota_miembro_periodo_nivel",
         ),
     )
 

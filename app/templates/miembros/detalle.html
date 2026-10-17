@@ -1,0 +1,329 @@
+{% extends "panel/base_panel.html" %}
+{% import "parciales/macros.html" as m %}
+{% from "miembros/_campos.html" import campo %}
+
+{% block titulo %}{{ miembro.nombre_completo }} · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">{{ miembro.nombre_completo }}</h1>
+  <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+</div>
+
+{# Resumen de la ficha y del estado del miembro. #}
+<div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="text-sm text-gray-500">{{ miembro.email }}</p>
+      <p class="mt-1 text-sm text-gray-500">
+        Incorporación: {{ miembro.fecha_incorporacion.strftime("%d/%m/%Y") }}
+      </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 text-xs">
+      <span class="rounded-full bg-gray-100 px-2.5 py-0.5 font-medium">
+        {{ etiquetas_categoria.get(miembro.categoria, miembro.categoria) }}
+      </span>
+      {% if miembro.situacion_activacion == "activo" %}
+        <span class="rounded-full bg-morosidad-verde/15 px-2.5 py-0.5 font-medium text-green-700">
+          Membresía activa
+        </span>
+      {% else %}
+        <span class="rounded-full bg-morosidad-naranjo/15 px-2.5 py-0.5 font-medium text-amber-700">
+          Pendiente de activación
+        </span>
+      {% endif %}
+      {% if miembro.esta_exento %}
+        {{ m.etiqueta_exento() }}
+      {% endif %}
+    </div>
+  </div>
+
+  <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Morosidad</dt>
+      <dd class="mt-1">
+        {% if miembro.esta_exento %}
+          {{ m.etiqueta_exento() }}
+        {% else %}
+          {{ m.etiqueta_morosidad(informacion.color, informacion.meses_deuda) }}
+        {% endif %}
+      </dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Deuda acumulada</dt>
+      <dd class="mt-1 font-medium tabular-nums">$ {{ informacion.monto_deuda_clp | clp }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Saldo a favor</dt>
+      <dd class="mt-1 font-medium tabular-nums">$ {{ saldo_a_favor | clp }}</dd>
+    </div>
+  </dl>
+
+  <dl class="mt-6 grid gap-3 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3">
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Teléfono</dt>
+      <dd>{{ miembro.telefono or "—" }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">RUT</dt>
+      <dd>{{ miembro.rut or "—" }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Fecha de nacimiento</dt>
+      <dd>
+        {{ miembro.fecha_nacimiento.strftime("%d/%m/%Y") if miembro.fecha_nacimiento else "—" }}
+      </dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Dirección</dt>
+      <dd>{{ miembro.direccion or "—" }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Contacto de emergencia</dt>
+      <dd>{{ miembro.contacto_emergencia or "—" }}</dd>
+    </div>
+    <div>
+      <dt class="text-xs uppercase tracking-wide text-gray-500">Condición</dt>
+      <dd>
+        {% if miembro.esta_exento %}
+          Exento · {{ miembro.motivo_exencion }}
+        {% else %}
+          Normal
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+</div>
+
+{# Obligación inicial y activación (F-07, RN-02, CA-01). #}
+<h2 class="mt-8 text-lg font-semibold">Activación de la membresía</h2>
+<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
+  <p class="text-sm text-gray-500">
+    El miembro pasa a <strong>Activo</strong> solo al completar el pago inicial:
+    Matrícula + la cuota de su categoría elegida (RN-02).
+  </p>
+
+  <div class="mt-4 overflow-x-auto rounded border border-gray-200">
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+        <tr>
+          <th scope="col" class="px-4 py-3">Concepto</th>
+          <th scope="col" class="px-4 py-3 text-right">Requerido</th>
+          <th scope="col" class="px-4 py-3 text-right">Pagado</th>
+          <th scope="col" class="px-4 py-3 text-right">Saldo</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for concepto in estado_activacion.conceptos %}
+          <tr>
+            <td class="px-4 py-3">{{ concepto.etiqueta }}</td>
+            <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.requerido_clp | clp }}</td>
+            <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.pagado_clp | clp }}</td>
+            <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.saldo_clp | clp }}</td>
+          </tr>
+        {% endfor %}
+        <tr class="bg-gray-50 font-medium">
+          <td class="px-4 py-3">Total del pago inicial</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.requerido_clp | clp }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.pagado_clp | clp }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.saldo_clp | clp }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    {% if miembro.situacion_activacion == "activo" %}
+      <p class="text-sm font-medium text-green-700">El miembro ya está activo.</p>
+    {% elif estado_activacion.completo %}
+      <p class="text-sm font-medium text-green-700">El pago inicial está completo.</p>
+      <form method="post" action="/miembros/{{ miembro.id }}/activar">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+          Activar membresía
+        </button>
+      </form>
+    {% else %}
+      <p class="text-sm font-medium text-amber-700">
+        Falta por pagar $ {{ estado_activacion.saldo_clp | clp }} del pago inicial.
+      </p>
+      <form method="post" action="/miembros/{{ miembro.id }}/activar">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+                class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
+          Evaluar activación
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{# Cambio de categoría con historial (F-05, RN-25, CA-29). #}
+<h2 class="mt-8 text-lg font-semibold">Cambio de categoría</h2>
+<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
+  <p class="text-sm text-gray-500">
+    Cada cambio entre <strong>Activo</strong> y <strong>Membresía</strong> queda registrado
+    y ajusta la cuota mensual del miembro (RN-25).
+  </p>
+  <form method="post" action="/miembros/{{ miembro.id }}/categoria" class="mt-4 flex flex-wrap items-end gap-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div>
+      <label for="categoria" class="block text-xs font-medium text-gray-600">Nueva categoría</label>
+      <select id="categoria" name="categoria"
+              class="mt-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+        {% for valor in categorias %}
+          <option value="{{ valor }}" {% if valor == miembro.categoria %}selected{% endif %}>
+            {{ etiquetas_categoria.get(valor, valor) }}{% if valor == miembro.categoria %} (actual){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit"
+            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+      Cambiar categoría
+    </button>
+  </form>
+</div>
+
+{# Exenciones: becado, invitado/influencer o retirado (F-09, RN-05, CA-03). #}
+<h2 class="mt-8 text-lg font-semibold">Exención de cobros</h2>
+<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
+  {% if miembro.esta_exento %}
+    <p class="text-sm">
+      El miembro está <strong>exento</strong> por
+      <strong>{{ miembro.motivo_exencion }}</strong>. Mientras mantenga esta condición
+      no se generan cobros ni avisos para él (RN-05).
+    </p>
+    <form method="post" action="/miembros/{{ miembro.id }}/exencion/quitar" class="mt-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit"
+              class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
+        Retirar exención
+      </button>
+    </form>
+  {% else %}
+    <p class="text-sm text-gray-500">
+      Marca al miembro como becado, invitado/influencer o retirado para excluirlo del
+      cobro y de los avisos, mostrando su cuota como exenta.
+    </p>
+    <form method="post" action="/miembros/{{ miembro.id }}/exencion" class="mt-4 flex flex-wrap items-end gap-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div>
+        <label for="motivo" class="block text-xs font-medium text-gray-600">Motivo</label>
+        <select id="motivo" name="motivo"
+                class="mt-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+          {% for motivo in motivos_exencion %}
+            <option value="{{ motivo }}">{{ motivo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+        Marcar exención
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+{# Edición de la ficha ampliada (T5.3). #}
+<h2 class="mt-8 text-lg font-semibold">Editar ficha</h2>
+<details class="mt-3 rounded-lg border border-gray-200 bg-white">
+  <summary class="cursor-pointer px-6 py-4 text-sm font-medium">Modificar los datos del miembro</summary>
+  <form method="post" action="/miembros/{{ miembro.id }}/editar"
+        class="grid gap-4 border-t border-gray-100 px-6 py-6 sm:grid-cols-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {{ campo("nombre_completo", "Nombre completo", {}, miembro.nombre_completo) }}
+    {{ campo("email", "Correo electrónico", {}, miembro.email, "email") }}
+    {{ campo("telefono", "Teléfono", {}, miembro.telefono or "", "tel") }}
+    {{ campo("rut", "RUT", {}, miembro.rut or "") }}
+    {{ campo("fecha_nacimiento", "Fecha de nacimiento", {},
+             miembro.fecha_nacimiento.isoformat() if miembro.fecha_nacimiento else "", "date") }}
+    {{ campo("direccion", "Dirección", {}, miembro.direccion or "") }}
+    {{ campo("contacto_emergencia", "Contacto de emergencia", {}, miembro.contacto_emergencia or "") }}
+    <div class="sm:col-span-2 mt-2">
+      <button type="submit"
+              class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+        Guardar cambios
+      </button>
+    </div>
+  </form>
+</details>
+
+{# Historial de cambios de categoría (CA-29). #}
+<h2 class="mt-8 text-lg font-semibold">Historial de categoría</h2>
+<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Fecha</th>
+        <th scope="col" class="px-4 py-3">Cambio</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for registro in historial %}
+        <tr>
+          <td class="px-4 py-3">{{ registro.fecha.strftime("%d/%m/%Y %H:%M") }}</td>
+          <td class="px-4 py-3">
+            {{ etiquetas_categoria.get(registro.categoria_anterior, registro.categoria_anterior) }}
+            → {{ etiquetas_categoria.get(registro.categoria_nueva, registro.categoria_nueva) }}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="2" class="px-4 py-6 text-center text-gray-500">
+            El miembro no ha cambiado de categoría.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Cuotas del miembro (incluida la Matrícula y las cuotas del ciclo mensual). #}
+<h2 class="mt-8 text-lg font-semibold">Cuotas</h2>
+<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Periodo</th>
+        <th scope="col" class="px-4 py-3">Concepto</th>
+        <th scope="col" class="px-4 py-3 text-right">Monto</th>
+        <th scope="col" class="px-4 py-3 text-right">Pagado</th>
+        <th scope="col" class="px-4 py-3">Estado</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for cuota in cuotas %}
+        <tr>
+          <td class="px-4 py-3">{{ "%02d"|format(cuota.mes) }}/{{ cuota.anio }}</td>
+          <td class="px-4 py-3">{{ cuota.nivel.nombre }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ cuota.monto_clp | clp }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ cuota.monto_pagado_clp | clp }}</td>
+          <td class="px-4 py-3">
+            {% if cuota.estado == "pagada" %}
+              <span class="text-green-700">Pagada</span>
+            {% elif cuota.estado == "exenta" %}
+              <span class="text-gray-500">Exenta</span>
+            {% elif cuota.estado == "parcial" %}
+              <span class="text-amber-700">Parcial</span>
+            {% else %}
+              <span class="text-red-700">Pendiente</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+            No hay cuotas registradas todavía.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="mt-3 text-xs text-gray-500">
+  La Matrícula es un cargo único de incorporación y no cuenta para la morosidad,
+  que solo considera las cuotas mensuales (F-11).
+</p>
+{% endblock %}

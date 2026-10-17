@@ -10,7 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.core.errores import registrar_manejadores
-from app.routers import auth, cuenta, landing, miembros
+from app.routers import auth, cuenta, landing, membresias, miembros
 
 settings = get_settings()
 
@@ -38,6 +38,7 @@ registrar_manejadores(app)
 app.include_router(landing.router)
 app.include_router(auth.router)
 app.include_router(miembros.router)
+app.include_router(membresias.router)
 app.include_router(cuenta.router)
 
 

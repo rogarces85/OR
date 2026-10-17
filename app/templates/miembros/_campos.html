@@ -1,0 +1,38 @@
+{# Campos de la ficha ampliada del miembro (D-6). Se reutilizan en el alta y en
+   la edición, por eso viven en un parcial con macros. #}
+
+{% macro campo(nombre, etiqueta, errores, valor="", tipo="text", placeholder="") %}
+  <div>
+    <label for="{{ nombre }}" class="block text-xs font-medium text-gray-600">
+      {{ etiqueta }} <span aria-hidden="true">*</span>
+    </label>
+    <input id="{{ nombre }}" name="{{ nombre }}" type="{{ tipo }}" value="{{ valor or '' }}"
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+           class="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none
+                  {% if errores.get(nombre) %}border-morosidad-rojo{% else %}border-gray-300{% endif %}">
+    {% if errores.get(nombre) %}
+      <p class="mt-1 text-xs text-red-700">{{ errores[nombre] }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+
+{% macro campo_categoria(categorias, seleccionada, error="") %}
+  <div>
+    <label for="categoria" class="block text-xs font-medium text-gray-600">
+      Categoría <span aria-hidden="true">*</span>
+    </label>
+    <select id="categoria" name="categoria"
+            class="mt-1 w-full rounded border px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none
+                   {% if error %}border-morosidad-rojo{% else %}border-gray-300{% endif %}">
+      {% for valor in categorias %}
+        <option value="{{ valor }}" {% if seleccionada == valor %}selected{% endif %}>
+          {{ "Activo (alumno) · cuota Activa" if valor == "activo" else "Membresía (apoyo) · cuota Estándar" }}
+        </option>
+      {% endfor %}
+    </select>
+    {% if error %}
+      <p class="mt-1 text-xs text-red-700">{{ error }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}

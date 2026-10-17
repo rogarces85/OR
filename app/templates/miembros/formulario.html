@@ -1,0 +1,45 @@
+{% extends "panel/base_panel.html" %}
+{% from "miembros/_campos.html" import campo, campo_categoria %}
+
+{% block titulo %}{{ titulo }} · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">{{ titulo }}</h1>
+  <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+</div>
+
+<p class="mt-1 text-sm text-gray-500">
+  Completa la ficha ampliada del miembro (D-6). La <strong>fecha de incorporación</strong>
+  se captura automáticamente como la fecha de alta en el sistema (D-3).
+</p>
+
+<div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+  <form method="post" action="{{ accion }}" class="grid gap-4 sm:grid-cols-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    {{ campo("nombre_completo", "Nombre completo", errores, datos.get("nombre_completo", ""), "text", "Ana Saldívar") }}
+    {{ campo("email", "Correo electrónico", errores, datos.get("email", ""), "email", "ana@example.com") }}
+    {{ campo("telefono", "Teléfono", errores, datos.get("telefono", ""), "tel", "+56 9 1234 5678") }}
+    {{ campo("rut", "RUT", errores, datos.get("rut", ""), "text", "12.345.678-9") }}
+    {{ campo("fecha_nacimiento", "Fecha de nacimiento", errores, datos.get("fecha_nacimiento", ""), "date") }}
+    {{ campo("direccion", "Dirección", errores, datos.get("direccion", ""), "text", "Calle 123, Osorno") }}
+    {{ campo("contacto_emergencia", "Contacto de emergencia", errores, datos.get("contacto_emergencia", ""), "text", "Nombre y teléfono") }}
+    {{ campo_categoria(categorias, categoria, errores.get("categoria", "")) }}
+
+    <div class="sm:col-span-2 mt-2 flex items-center gap-3">
+      <button type="submit"
+              class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+        Registrar miembro
+      </button>
+      <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+<p class="mt-4 text-xs text-gray-500">
+  Al registrar el miembro, el sistema genera su obligación inicial:
+  <strong>Matrícula + la cuota de la categoría elegida</strong> (Flujo 1, RN-02).
+  Queda <strong>pendiente</strong> hasta completar ese pago.
+</p>
+{% endblock %}
