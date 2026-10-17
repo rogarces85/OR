@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.core.errores import registrar_manejadores
+from app.dependencies import SesionBD
 from app.routers import (
     auth,
     compras,
@@ -61,10 +64,21 @@ app.include_router(cuenta.router)
 
 
 @app.get("/salud")
-async def salud() -> dict[str, str]:
-    """Ruta de salud: confirma que la aplicación está en pie."""
+async def salud(db: SesionBD, response: Response) -> dict[str, str]:
+    """Ruta de salud: confirma la app y la conexión a MySQL/MariaDB (T7.1).
+
+    Si la base de datos no responde, se reporta el estado degradado con un
+    503 para que un monitor externo pueda detectarlo.
+    """
+    try:
+        db.execute(text("SELECT 1"))
+        base_de_datos = "ok"
+    except SQLAlchemyError:
+        base_de_datos = "error"
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return {
-        "estado": "ok",
+        "estado": "ok" if base_de_datos == "ok" else "degradado",
         "app": settings.app_name,
         "entorno": settings.entorno,
+        "base_de_datos": base_de_datos,
     }

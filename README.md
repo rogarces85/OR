@@ -8,6 +8,7 @@ Documentación oficial en `specs/`:
 - `specs/SPECS.md` — especificación funcional verificada (F / RN / CA / D).
 - `specs/PLAN.md` — plan técnico.
 - `specs/TASK.md` — hoja de ruta de implementación.
+- `specs/GUIA_DEMO.md` — guion de demostración del MVP paso a paso.
 
 ## Stack
 
@@ -82,6 +83,20 @@ Durante el desarrollo de la interfaz, recompilar Tailwind con:
 ```powershell
 npm run css:dev
 ```
+
+## Demo guiada
+
+Para una demostración completa del MVP (miembros, pagos, morosidad,
+negociación, finanzas, compras y reportes):
+
+```powershell
+.\venv\Scripts\python.exe -m app.seed   # datos de ejemplo (idempotente)
+.\venv\Scripts\python.exe -m app.demo   # caso de negociación (idempotente)
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+El guion paso a paso, con credenciales y datos esperados, está en
+[`specs/GUIA_DEMO.md`](specs/GUIA_DEMO.md).
 
 ## Estructura del proyecto
 

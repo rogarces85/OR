@@ -4,9 +4,15 @@
 {% block titulo %}Informe de {{ miembro.nombre_completo }} · {{ app_name }}{% endblock %}
 
 {% block panel %}
-<div class="flex flex-wrap items-baseline justify-between gap-2">
+<div class="flex flex-wrap items-center justify-between gap-2">
   <h1 class="text-2xl font-bold">Informe de {{ miembro.nombre_completo }}</h1>
-  <a href="/miembros/{{ miembro.id }}" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver a la ficha</a>
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="/reportes/informe/{{ miembro.id }}/exportar.pdf?anio={{ anio }}"
+       class="rounded border border-marca-negro px-3 py-1.5 text-sm font-medium text-marca-negro hover:bg-gray-100">
+      Exportar PDF
+    </a>
+    <a href="/miembros/{{ miembro.id }}" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver a la ficha</a>
+  </div>
 </div>
 <p class="mt-1 text-sm text-gray-500">
   Cuotas mensuales del año en formato calendario (F-21, UI-06).

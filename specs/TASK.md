@@ -375,19 +375,19 @@
 
 ## Fase 7 — Integraciones
 
-- [ ] **T7.1 · Integrar la conexión MySQL/MariaDB end-to-end**
+- [x] **T7.1 · Integrar la conexión MySQL/MariaDB end-to-end**
   - Qué: confirmar la conexión desde la app (dev y configuración productiva local).
   - Verificación: la app opera con MySQL de XAMPP.
   - Relación: P-1.
-- [ ] **T7.2 · Exportación de reportes consolidados a XLSX**
+- [x] **T7.2 · Exportación de reportes consolidados a XLSX**
   - Qué: generar el archivo XLSX del reporte con `openpyxl`.
   - Verificación: el archivo descargado contiene los mismos totales que la pantalla (CA-11).
   - Relación: F-20, P-3.
-- [ ] **T7.3 · Exportación del informe calendario a PDF**
+- [x] **T7.3 · Exportación del informe calendario a PDF**
   - Qué: generar el PDF del informe calendario.
   - Verificación: el PDF refleja el estado y los montos del informe.
   - Relación: F-21, P-3.
-- [ ] **T7.4 · Integrar la generación del enlace mailto en el aviso de morosidad**
+- [x] **T7.4 · Integrar la generación del enlace mailto en el aviso de morosidad**
   - Qué: componer el enlace `mailto:` con asunto y cuerpo de la plantilla y datos de la cuenta.
   - Verificación: al pulsarlo se abre el cliente de correo con el texto completo (CA-15).
   - Relación: F-23, P-2.
