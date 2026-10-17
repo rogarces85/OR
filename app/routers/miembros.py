@@ -28,7 +28,8 @@ from app.models.usuario import ROLES_GESTION, Usuario
 from app.repositories import membresia as repo_membresia
 from app.repositories import miembro as repo_miembro
 from app.repositories import pago as repo_pago
-from app.schemas.miembro import ETIQUETAS_CAMPO, MiembroEntrada, mensajes_por_campo
+from app.schemas.comunes import mensajes_por_campo
+from app.schemas.miembro import ETIQUETAS_CAMPO, MiembroEntrada
 from app.services import activacion as servicio_activacion
 from app.services import membresias as servicio_membresias
 from app.services.morosidad import calcular_morosidad, listar_miembros_con_morosidad

@@ -1,0 +1,117 @@
+{% extends "panel/base_panel.html" %}
+{% import "parciales/macros.html" as m %}
+
+{% block titulo %}Morosidad · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">Morosidad</h1>
+  <a href="/morosidad/avisos" class="text-sm text-gray-600 hover:text-marca-rojo">Ver avisos generados →</a>
+</div>
+<p class="mt-1 text-sm text-gray-500">
+  Clasificación por color de los miembros con deuda de cuotas mensuales (F-11, F-22).
+</p>
+
+{# Resumen por color. #}
+<div class="mt-6 grid gap-3 sm:grid-cols-4">
+  <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <p class="text-xs uppercase tracking-wide text-gray-500">Al día</p>
+    <p class="mt-1 text-2xl font-bold">{{ resumen.verde }}</p>
+  </div>
+  <div class="rounded-lg border border-morosidad-naranjo/40 bg-morosidad-naranjo/10 p-4">
+    <p class="text-xs uppercase tracking-wide text-amber-700">Hasta 3 meses</p>
+    <p class="mt-1 text-2xl font-bold text-amber-700">{{ resumen.naranjo }}</p>
+  </div>
+  <div class="rounded-lg border border-morosidad-rojo/40 bg-morosidad-rojo/10 p-4">
+    <p class="text-xs uppercase tracking-wide text-red-700">Más de 3 meses</p>
+    <p class="mt-1 text-2xl font-bold text-red-700">{{ resumen.rojo }}</p>
+  </div>
+  <div class="rounded-lg border border-gray-200 bg-white p-4">
+    <p class="text-xs uppercase tracking-wide text-gray-500">Deuda total</p>
+    <p class="mt-1 text-2xl font-bold tabular-nums">$ {{ resumen.deuda_total_clp | clp }}</p>
+  </div>
+</div>
+
+{# Filtros del panel (UI-08). #}
+<form method="get" action="/morosidad" class="mt-6 grid gap-3 sm:grid-cols-3">
+  <div>
+    <label for="q" class="block text-xs font-medium text-gray-600">Buscar</label>
+    <input id="q" name="q" type="search" value="{{ filtros.q }}" placeholder="Nombre, correo o RUT"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div>
+    <label for="color" class="block text-xs font-medium text-gray-600">Color de morosidad</label>
+    <select id="color" name="color"
+            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      <option value="">Todos</option>
+      <option value="verde" {% if filtros.color == "verde" %}selected{% endif %}>Al día (verde)</option>
+      <option value="naranjo" {% if filtros.color == "naranjo" %}selected{% endif %}>Hasta 3 meses (naranjo)</option>
+      <option value="rojo" {% if filtros.color == "rojo" %}selected{% endif %}>Más de 3 meses (rojo)</option>
+    </select>
+  </div>
+  <div class="flex items-end gap-2">
+    <button type="submit"
+            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+      Filtrar
+    </button>
+    <a href="/morosidad" class="px-2 py-2 text-sm text-gray-600 hover:text-marca-rojo">Limpiar</a>
+  </div>
+</form>
+
+<div class="mt-6 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Miembro</th>
+        <th scope="col" class="px-4 py-3">Clasificación</th>
+        <th scope="col" class="px-4 py-3 text-right">Meses</th>
+        <th scope="col" class="px-4 py-3 text-right">Deuda</th>
+        <th scope="col" class="px-4 py-3 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for miembro, informacion in filas %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">
+            <a href="/miembros/{{ miembro.id }}" class="font-medium hover:text-marca-rojo">
+              {{ miembro.nombre_completo }}
+            </a>
+            <p class="text-xs text-gray-500">{{ miembro.email }}</p>
+          </td>
+          <td class="px-4 py-3">
+            {% if miembro.esta_exento %}
+              {{ m.etiqueta_exento() }}
+            {% else %}
+              {{ m.etiqueta_morosidad(informacion.color, informacion.meses_deuda) }}
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right tabular-nums">{{ informacion.meses_deuda }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ informacion.monto_deuda_clp | clp }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <a href="/reportes/informe/{{ miembro.id }}"
+                 class="text-xs text-gray-600 hover:text-marca-rojo">Informe</a>
+              {% if not miembro.esta_exento and informacion.meses_deuda > 0 %}
+                <form method="post" action="/morosidad/aviso" class="inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <input type="hidden" name="miembro_id" value="{{ miembro.id }}">
+                  <button type="submit"
+                          class="rounded bg-marca-rojo px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-red-700">
+                    Generar aviso
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="5" class="px-4 py-10 text-center text-gray-500">
+            No hay miembros que coincidan con el filtro aplicado.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

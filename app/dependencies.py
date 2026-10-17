@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.core.formato import formatear_clp
+from app.core.periodos import MESES_NOMBRES
 from app.database import SessionLocal
 
 settings = get_settings()
@@ -38,6 +39,7 @@ templates = Jinja2Templates(
     context_processors=[_contexto_base],
 )
 templates.env.globals["app_name"] = settings.app_name
+templates.env.globals["meses_nombres"] = MESES_NOMBRES
 templates.env.filters["clp"] = formatear_clp
 
 

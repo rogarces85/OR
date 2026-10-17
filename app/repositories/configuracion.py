@@ -87,3 +87,30 @@ def crear_aviso(
     )
     db.add(aviso)
     return aviso
+
+
+def obtener_aviso(db: Session, aviso_id: int) -> AvisoMorosidad | None:
+    """Devuelve un aviso de morosidad por su identificador."""
+    return db.get(AvisoMorosidad, aviso_id)
+
+
+def listar_avisos(
+    db: Session, *, miembro_id: int | None = None, estado: str | None = None
+) -> list[AvisoMorosidad]:
+    """Lista los avisos de morosidad, del más reciente al más antiguo."""
+    consulta = select(AvisoMorosidad).order_by(
+        AvisoMorosidad.generado_en.desc(), AvisoMorosidad.id.desc()
+    )
+    if miembro_id is not None:
+        consulta = consulta.where(AvisoMorosidad.miembro_id == miembro_id)
+    if estado:
+        consulta = consulta.where(AvisoMorosidad.estado == estado)
+    return list(db.scalars(consulta))
+
+
+def guardar_aviso(db: Session, aviso: AvisoMorosidad) -> AvisoMorosidad:
+    """Confirma los cambios de un aviso de morosidad."""
+    db.add(aviso)
+    db.commit()
+    db.refresh(aviso)
+    return aviso

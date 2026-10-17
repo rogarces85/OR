@@ -1,0 +1,49 @@
+{# Informe mensual en formato calendario (F-21, UI-06, T5.33). #}
+
+{% macro calendario(informe) %}
+  <div class="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+    {% for mes in informe.meses %}
+      {% if not mes.tiene_cuota %}
+        {% set borde = "border-gray-200" %}
+        {% set fondo = "bg-gray-50" %}
+        {% set texto = "text-gray-400" %}
+        {% set etiqueta = "Sin cuota" %}
+      {% elif mes.es_exenta %}
+        {% set borde = "border-gray-200" %}
+        {% set fondo = "bg-gray-50" %}
+        {% set texto = "text-gray-500" %}
+        {% set etiqueta = "Exenta" %}
+      {% elif mes.es_pagada %}
+        {% set borde = "border-morosidad-verde/40" %}
+        {% set fondo = "bg-morosidad-verde/10" %}
+        {% set texto = "text-green-700" %}
+        {% set etiqueta = "Pagada" %}
+      {% elif mes.estado == "parcial" %}
+        {% set borde = "border-morosidad-naranjo/40" %}
+        {% set fondo = "bg-morosidad-naranjo/10" %}
+        {% set texto = "text-amber-700" %}
+        {% set etiqueta = "Parcial" %}
+      {% else %}
+        {% set borde = "border-morosidad-rojo/40" %}
+        {% set fondo = "bg-morosidad-rojo/10" %}
+        {% set texto = "text-red-700" %}
+        {% set etiqueta = "Pendiente" %}
+      {% endif %}
+      <div class="rounded-lg border {{ borde }} {{ fondo }} p-3">
+        <div class="flex items-baseline justify-between">
+          <p class="text-sm font-semibold">
+            {{ meses_nombres[mes.mes - 1] if meses_nombres else mes.mes }}
+          </p>
+          <span class="text-xs font-medium {{ texto }}">{{ etiqueta }}</span>
+        </div>
+        {% if mes.tiene_cuota %}
+          <p class="mt-1 text-xs text-gray-600 tabular-nums">
+            $ {{ mes.pagado_clp | clp }} / $ {{ mes.monto_clp | clp }}
+          </p>
+        {% else %}
+          <p class="mt-1 text-xs text-gray-400">—</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}

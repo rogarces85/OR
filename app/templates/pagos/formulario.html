@@ -1,0 +1,156 @@
+{% extends "panel/base_panel.html" %}
+
+{% block titulo %}Registrar pago · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">Registrar pago</h1>
+  <a href="/pagos" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver a ingresos</a>
+</div>
+<p class="mt-1 text-sm text-gray-500">
+  Pago con monto libre. Se imputa primero a la deuda más antigua, luego a los meses
+  indicados y el excedente queda como abono (RN-17, RN-18).
+</p>
+
+{% if miembro is none %}
+  {# Selección del miembro cuando todavía no se eligió (UI-07). #}
+  <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+    <form method="get" action="/pagos/nuevo" class="flex flex-wrap items-end gap-3">
+      <div class="min-w-[16rem]">
+        <label for="miembro_id" class="block text-xs font-medium text-gray-600">Miembro</label>
+        <select id="miembro_id" name="miembro_id" required
+                class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+          <option value="">Selecciona un miembro…</option>
+          {% for opcion in miembros %}
+            <option value="{{ opcion.id }}">{{ opcion.nombre_completo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+        Continuar
+      </button>
+    </form>
+  </div>
+{% else %}
+  {# Contexto del miembro: deuda y abono disponible. #}
+  <div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <div class="rounded-lg border border-gray-200 bg-white p-4 lg:col-span-2">
+      <p class="text-sm font-semibold">{{ miembro.nombre_completo }}</p>
+      <p class="text-xs text-gray-500">{{ miembro.email }}</p>
+      {% if miembro.esta_exento %}
+        <p class="mt-2 rounded bg-gray-100 px-3 py-2 text-xs text-gray-600">
+          El miembro está exento ({{ miembro.motivo_exencion }}): no genera obligación
+          de pago (RN-05).
+        </p>
+      {% endif %}
+      <h2 class="mt-3 text-xs uppercase tracking-wide text-gray-500">Deuda vigente</h2>
+      <div class="mt-2 overflow-x-auto rounded border border-gray-200">
+        <table class="min-w-full divide-y divide-gray-100 text-sm">
+          <thead class="bg-gray-50 text-left text-xs text-gray-500">
+            <tr>
+              <th scope="col" class="px-3 py-2">Periodo</th>
+              <th scope="col" class="px-3 py-2">Concepto</th>
+              <th scope="col" class="px-3 py-2 text-right">Saldo</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for cuota in deuda %}
+              <tr>
+                <td class="px-3 py-2">{{ "%02d"|format(cuota.mes) }}/{{ cuota.anio }}</td>
+                <td class="px-3 py-2">{{ cuota.nivel.nombre }}</td>
+                <td class="px-3 py-2 text-right tabular-nums">$ {{ cuota.saldo_clp | clp }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="3" class="px-3 py-6 text-center text-gray-500">Sin deuda registrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-white p-4">
+      <p class="text-xs uppercase tracking-wide text-gray-500">Saldo a favor</p>
+      <p class="mt-1 text-lg font-semibold tabular-nums">$ {{ saldo_a_favor | clp }}</p>
+      <p class="mt-2 text-xs text-gray-500">
+        Se aplica automáticamente a la siguiente cuota cuando hay excedente (RN-18).
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
+    <form method="post" action="/miembros/{{ miembro.id }}/pagos" class="grid gap-4 sm:grid-cols-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <div>
+        <label for="monto" class="block text-xs font-medium text-gray-600">
+          Monto (CLP) <span aria-hidden="true">*</span>
+        </label>
+        <input id="monto" name="monto" type="text" inputmode="numeric"
+               value="{{ datos.get('monto', '') }}" placeholder="45.000"
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+
+      <div>
+        <label for="medio" class="block text-xs font-medium text-gray-600">Medio de pago</label>
+        <select id="medio" name="medio"
+                class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+          {% for opcion in medios %}
+            <option value="{{ opcion }}" {% if datos.get('medio', 'transferencia') == opcion %}selected{% endif %}>
+              {{ opcion | capitalize }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="fecha_pago" class="block text-xs font-medium text-gray-600">Fecha del pago</label>
+        <input id="fecha_pago" name="fecha_pago" type="date" value="{{ datos.get('fecha_pago', '') }}"
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+
+      <div>
+        <label for="anio" class="block text-xs font-medium text-gray-600">Año a cubrir</label>
+        <select id="anio" name="anio"
+                class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+          {% set anio_sel = datos.get('anio') or anio_actual %}
+          {% for valor in range(anio_min, anio_max + 1) %}
+            <option value="{{ valor }}" {% if valor|string == anio_sel|string %}selected{% endif %}>{{ valor }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="sm:col-span-2">
+        <span class="block text-xs font-medium text-gray-600">Meses a cubrir</span>
+        <div class="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {% set seleccion = datos.get('meses', []) %}
+          {% for mes in meses %}
+            <label class="flex items-center gap-2 rounded border border-gray-300 px-2 py-1.5 text-sm">
+              <input type="checkbox" name="meses" value="{{ mes }}"
+                     {% if mes|string in seleccion or mes in seleccion %}checked{% endif %}>
+              {{ meses_nombres[mes - 1] }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label for="observaciones" class="block text-xs font-medium text-gray-600">Observaciones</label>
+        <input id="observaciones" name="observaciones" type="text" value="{{ datos.get('observaciones', '') }}"
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+
+      <div class="sm:col-span-2 mt-1 flex items-center gap-3">
+        <button type="submit"
+                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+          Registrar pago
+        </button>
+        <a href="/miembros/{{ miembro.id }}/pagos/nuevo" class="text-sm text-gray-600 hover:text-marca-rojo">Limpiar</a>
+      </div>
+    </form>
+  </div>
+  <p class="mt-3 text-xs text-gray-500">
+    Regla del corte: un pago posterior al día 5, referido al mes en curso, se imputa al
+    ciclo siguiente (RN-03).
+  </p>
+{% endif %}
+{% endblock %}

@@ -11,11 +11,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from pydantic import ValidationError
 
 from app.core.seguridad import flash, requiere_rol, validar_csrf
 from app.dependencies import SesionBD, templates
 from app.models.usuario import ROLES_GESTION, Usuario
 from app.repositories import membresia as repo_membresia
+from app.schemas.membresia import GeneracionCuotasEntrada
 from app.services import membresias as servicio_membresias
 
 router = APIRouter(tags=["membresías"])
@@ -96,11 +98,8 @@ async def generar_cuotas(
 ) -> RedirectResponse:
     """Genera las cuotas del periodo para los miembros activos y no exentos (T5.8)."""
     try:
-        periodo_anio = int(anio)
-        periodo_mes = int(mes)
-    except ValueError:
-        periodo_anio, periodo_mes = date.today().year, date.today().month
-    if not ANIO_MINIMO <= periodo_anio <= ANIO_MAXIMO or periodo_mes not in MESES_VALIDOS:
+        entrada = GeneracionCuotasEntrada(anio=anio, mes=mes)
+    except ValidationError:
         flash(request, "error", "Indica un periodo válido para generar las cuotas.")
         return RedirectResponse("/membresias", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -109,21 +108,21 @@ async def generar_cuotas(
         return RedirectResponse("/membresias", status_code=status.HTTP_303_SEE_OTHER)
 
     creadas = servicio_membresias.generar_cuotas_del_periodo(
-        db, periodo_anio, periodo_mes
+        db, entrada.anio, entrada.mes
     )
-    destino = f"/membresias?anio={periodo_anio}&mes={periodo_mes}"
+    destino = f"/membresias?anio={entrada.anio}&mes={entrada.mes}"
     if creadas:
         flash(
             request,
             "ok",
             f"Se generaron {len(creadas)} cuota(s) para el periodo "
-            f"{periodo_mes:02d}/{periodo_anio}.",
+            f"{entrada.mes:02d}/{entrada.anio}.",
         )
     else:
         flash(
             request,
             "ok",
-            f"No había cuotas por generar en el periodo {periodo_mes:02d}/{periodo_anio}: "
+            f"No había cuotas por generar en el periodo {entrada.mes:02d}/{entrada.anio}: "
             "todos los miembros activos y no exentos ya tienen la suya.",
         )
     return RedirectResponse(destino, status_code=status.HTTP_303_SEE_OTHER)

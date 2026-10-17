@@ -7,6 +7,8 @@ from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.membresia import CuotaMensual, NivelCuota
+from app.models.miembro import Miembro
 from app.models.pago import (
     ESTADO_DISPONIBLE,
     MEDIO_TRANSFERENCIA,
@@ -100,3 +102,52 @@ def saldo_a_favor(db: Session, miembro_id: int) -> int:
         )
     )
     return sum(abono.saldo_disponible_clp for abono in abonos)
+
+
+def obtener(db: Session, pago_id: int) -> Pago | None:
+    """Devuelve un pago por su identificador."""
+    return db.get(Pago, pago_id)
+
+
+def imputaciones_de_pago(db: Session, pago_id: int) -> list[ImputacionPago]:
+    """Lista las imputaciones de un pago, en el orden en que se aplicaron."""
+    return list(
+        db.scalars(
+            select(ImputacionPago)
+            .where(ImputacionPago.pago_id == pago_id)
+            .order_by(ImputacionPago.orden, ImputacionPago.id)
+        )
+    )
+
+
+def listar_ingresos(
+    db: Session,
+    *,
+    desde: date | None = None,
+    hasta: date | None = None,
+    nivel_codigo: str | None = None,
+    situacion: str | None = None,
+) -> list[Pago]:
+    """Lista los ingresos (pagos) filtrando por periodo, tipo de cuota y estado.
+
+    Cubre F-15 (ingresos filtrados por tipo de cuota y por estado del usuario).
+    """
+    consulta = select(Pago).join(Miembro, Pago.miembro_id == Miembro.id)
+    if desde is not None:
+        consulta = consulta.where(Pago.fecha_pago >= desde)
+    if hasta is not None:
+        consulta = consulta.where(Pago.fecha_pago <= hasta)
+    if nivel_codigo:
+        consulta = (
+            consulta.join(ImputacionPago, ImputacionPago.pago_id == Pago.id)
+            .join(CuotaMensual, ImputacionPago.cuota_id == CuotaMensual.id)
+            .join(NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id)
+            .where(NivelCuota.codigo == nivel_codigo)
+        )
+    if situacion:
+        consulta = consulta.where(Miembro.situacion_activacion == situacion)
+    return list(
+        db.scalars(
+            consulta.distinct().order_by(Pago.fecha_pago.desc(), Pago.id.desc())
+        )
+    )

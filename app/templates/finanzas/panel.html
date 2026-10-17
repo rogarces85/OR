@@ -1,0 +1,237 @@
+{% extends "panel/base_panel.html" %}
+
+{% block titulo %}Finanzas · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">Finanzas</h1>
+  <a href="/pagos" class="text-sm text-gray-600 hover:text-marca-rojo">Ver ingresos →</a>
+</div>
+<p class="mt-1 text-sm text-gray-500">
+  Egresos con categoría, activos del club y gastos fijos operativos (F-16, F-17, F-18).
+</p>
+
+{# Categorías de egreso (T5.24, RN-10). #}
+<h2 class="mt-8 text-lg font-semibold">Categorías de egreso</h2>
+<div class="mt-3 grid gap-4 lg:grid-cols-3">
+  <div class="rounded-lg border border-gray-200 bg-white p-4 lg:col-span-2">
+    <ul class="flex flex-wrap gap-2">
+      {% for categoria in categorias %}
+        <li class="flex items-center gap-2 rounded-full border px-3 py-1 text-sm
+                   {% if categoria.activo %}border-gray-300{% else %}border-gray-200 bg-gray-50 text-gray-400{% endif %}">
+          {{ categoria.nombre }}
+          {% if categoria.es_base %}
+            <span class="text-[10px] uppercase tracking-wide text-gray-400">Base</span>
+          {% else %}
+            <form method="post" action="/finanzas/categorias/{{ categoria.id }}/estado" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="activo" value="{{ '0' if categoria.activo else '1' }}">
+              <button type="submit" class="text-xs text-marca-rojo hover:underline">
+                {{ "Desactivar" if categoria.activo else "Activar" }}
+              </button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <form method="post" action="/finanzas/categorias" class="rounded-lg border border-gray-200 bg-white p-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="nombre_categoria" class="block text-xs font-medium text-gray-600">Nueva categoría</label>
+    <input id="nombre_categoria" name="nombre" type="text" placeholder="Arriendo sede"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+    <button type="submit"
+            class="mt-3 rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+      Agregar categoría
+    </button>
+  </form>
+</div>
+
+{# Registro de egresos (T5.25). #}
+<h2 class="mt-8 text-lg font-semibold">Registrar egreso</h2>
+<form method="post" action="/finanzas/egresos"
+      class="mt-3 grid gap-3 rounded-lg border border-gray-200 bg-white p-6 sm:grid-cols-2 lg:grid-cols-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div>
+    <label for="eg_concepto" class="block text-xs font-medium text-gray-600">Concepto</label>
+    <input id="eg_concepto" name="concepto" type="text" required
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div>
+    <label for="eg_monto" class="block text-xs font-medium text-gray-600">Monto (CLP)</label>
+    <input id="eg_monto" name="monto" type="text" inputmode="numeric" required placeholder="25.000"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div>
+    <label for="eg_categoria" class="block text-xs font-medium text-gray-600">Categoría</label>
+    <select id="eg_categoria" name="categoria_id" required
+            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      {% for categoria in categorias_activas %}
+        <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="eg_fecha" class="block text-xs font-medium text-gray-600">Fecha</label>
+    <input id="eg_fecha" name="fecha" type="date"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div class="sm:col-span-2 lg:col-span-4">
+    <button type="submit"
+            class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+      Registrar egreso
+    </button>
+  </div>
+</form>
+
+{# Activos y gastos fijos (T5.26, T5.27). #}
+<div class="mt-6 grid gap-4 lg:grid-cols-2">
+  <form method="post" action="/finanzas/activos" class="grid gap-3 rounded-lg border border-gray-200 bg-white p-6 sm:grid-cols-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h3 class="sm:col-span-2 text-sm font-semibold">Adquirir activo</h3>
+    <div class="sm:col-span-2">
+      <label for="ac_descripcion" class="block text-xs font-medium text-gray-600">Descripción</label>
+      <input id="ac_descripcion" name="descripcion" type="text" required
+             class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+    </div>
+    <div>
+      <label for="ac_costo" class="block text-xs font-medium text-gray-600">Costo (CLP)</label>
+      <input id="ac_costo" name="costo" type="text" inputmode="numeric" required
+             class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+    </div>
+    <div>
+      <label for="ac_responsable" class="block text-xs font-medium text-gray-600">Responsable</label>
+      <select id="ac_responsable" name="miembro_responsable_id"
+              class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+        <option value="">Sin responsable</option>
+        {% for persona in miembros %}
+          <option value="{{ persona.id }}">{{ persona.nombre_completo }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="sm:col-span-2">
+      <label for="ac_fecha" class="block text-xs font-medium text-gray-600">Fecha</label>
+      <input id="ac_fecha" name="fecha" type="date"
+             class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+    </div>
+    <div class="sm:col-span-2">
+      <button type="submit"
+              class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+        Registrar activo
+      </button>
+    </div>
+  </form>
+
+  <div class="rounded-lg border border-gray-200 bg-white p-6">
+    <h3 class="text-sm font-semibold">Gastos fijos operativos</h3>
+    <form method="post" action="/finanzas/gastos-fijos" class="mt-3 grid gap-3 sm:grid-cols-2">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="sm:col-span-2">
+        <label for="gf_concepto" class="block text-xs font-medium text-gray-600">Concepto</label>
+        <input id="gf_concepto" name="concepto" type="text" required
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+      <div>
+        <label for="gf_monto" class="block text-xs font-medium text-gray-600">Monto mensual (CLP)</label>
+        <input id="gf_monto" name="monto" type="text" inputmode="numeric" required
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+      <div>
+        <label for="gf_fecha" class="block text-xs font-medium text-gray-600">Fecha</label>
+        <input id="gf_fecha" name="fecha" type="date"
+               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      </div>
+      <div class="sm:col-span-2">
+        <button type="submit"
+                class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+          Registrar gasto fijo
+        </button>
+      </div>
+    </form>
+
+    <ul class="mt-4 divide-y divide-gray-100 text-sm">
+      {% for gasto in gastos_fijos %}
+        <li class="flex items-center justify-between py-2">
+          <span>{{ gasto.concepto }}</span>
+          <span class="tabular-nums">$ {{ gasto.monto_clp | clp }} / mes</span>
+        </li>
+      {% else %}
+        <li class="py-2 text-gray-500">Sin gastos fijos registrados.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{# Listado de egresos con filtros (T5.28, F-16). #}
+<h2 class="mt-8 text-lg font-semibold">Egresos</h2>
+<form method="get" action="/finanzas" class="mt-3 grid gap-3 sm:grid-cols-4">
+  <div>
+    <label for="desde" class="block text-xs font-medium text-gray-600">Desde</label>
+    <input id="desde" name="desde" type="date" value="{{ filtros.desde }}"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div>
+    <label for="hasta" class="block text-xs font-medium text-gray-600">Hasta</label>
+    <input id="hasta" name="hasta" type="date" value="{{ filtros.hasta }}"
+           class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+  </div>
+  <div>
+    <label for="categoria" class="block text-xs font-medium text-gray-600">Categoría</label>
+    <select id="categoria" name="categoria"
+            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+      <option value="">Todas</option>
+      {% for categoria in categorias %}
+        <option value="{{ categoria.id }}" {% if filtros.categoria == categoria.id|string %}selected{% endif %}>
+          {{ categoria.nombre }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="flex items-end gap-2">
+    <button type="submit"
+            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+      Filtrar
+    </button>
+    <a href="/finanzas" class="px-2 py-2 text-sm text-gray-600 hover:text-marca-rojo">Limpiar</a>
+  </div>
+</form>
+
+<div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Fecha</th>
+        <th scope="col" class="px-4 py-3">Concepto</th>
+        <th scope="col" class="px-4 py-3">Categoría</th>
+        <th scope="col" class="px-4 py-3">Tipo</th>
+        <th scope="col" class="px-4 py-3 text-right">Monto</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for egreso in egresos %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">{{ egreso.fecha.strftime("%d/%m/%Y") }}</td>
+          <td class="px-4 py-3">{{ egreso.concepto }}</td>
+          <td class="px-4 py-3">{{ egreso.categoria.nombre }}</td>
+          <td class="px-4 py-3 capitalize">{{ egreso.tipo | replace("_", " ") }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ egreso.monto_clp | clp }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="5" class="px-4 py-10 text-center text-gray-500">
+            No hay egresos que coincidan con el filtro aplicado.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    {% if egresos %}
+      <tfoot class="bg-gray-50 font-medium">
+        <tr>
+          <td colspan="4" class="px-4 py-3 text-right">Total del periodo</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ total_egresos_clp | clp }}</td>
+        </tr>
+      </tfoot>
+    {% endif %}
+  </table>
+</div>
+{% endblock %}

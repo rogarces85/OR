@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "parciales/macros.html" as m %}
+{% import "parciales/informe_calendario.html" as ic %}
 
 {% block titulo %}Mi estado de cuenta · {{ app_name }}{% endblock %}
 
@@ -103,6 +104,26 @@
           {% endfor %}
         </tbody>
       </table>
+    </div>
+
+    {# Informe mensual en formato calendario (F-21, UI-06, T5.15, T5.33). #}
+    <div class="mt-8 flex flex-wrap items-baseline justify-between gap-2">
+      <h2 class="text-lg font-semibold">Informe {{ anio }}</h2>
+      <form method="get" action="/mi/estado" class="flex items-end gap-2">
+        <label for="anio" class="text-xs font-medium text-gray-600">Año</label>
+        <select id="anio" name="anio"
+                class="rounded border border-gray-300 px-2 py-1 text-sm focus:border-marca-rojo focus:outline-none">
+          {% for valor in range(anio - 3, anio + 3) %}
+            <option value="{{ valor }}" {% if valor == anio %}selected{% endif %}>{{ valor }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="rounded bg-marca-negro px-3 py-1.5 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+          Ver
+        </button>
+      </form>
+    </div>
+    <div class="mt-3">
+      {{ ic.calendario(informe) }}
     </div>
 
     {# Avisos de morosidad propios (F-23, UI-05). #}

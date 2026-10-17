@@ -111,3 +111,32 @@ def listar_gastos_fijos(db: Session, *, solo_activos: bool = True) -> list[Gasto
     if solo_activos:
         consulta = consulta.where(GastoFijo.activo.is_(True))
     return list(db.scalars(consulta))
+
+
+def obtener_egreso(db: Session, egreso_id: int) -> Egreso | None:
+    """Devuelve un egreso por su identificador."""
+    return db.get(Egreso, egreso_id)
+
+
+def guardar_categoria(db: Session, categoria: CategoriaEgreso) -> CategoriaEgreso:
+    """Confirma los cambios de una categoría de egreso."""
+    db.add(categoria)
+    db.commit()
+    db.refresh(categoria)
+    return categoria
+
+
+def guardar_egreso(db: Session, egreso: Egreso) -> Egreso:
+    """Confirma un egreso."""
+    db.add(egreso)
+    db.commit()
+    db.refresh(egreso)
+    return egreso
+
+
+def guardar_gasto_fijo(db: Session, gasto: GastoFijo) -> GastoFijo:
+    """Confirma un gasto fijo."""
+    db.add(gasto)
+    db.commit()
+    db.refresh(gasto)
+    return gasto

@@ -89,3 +89,51 @@ def cargos_de_miembro(db: Session, miembro_id: int) -> list[CargoAlumno]:
             .order_by(CargoAlumno.fecha.desc())
         )
     )
+
+
+def obtener_compra(db: Session, compra_id: int) -> CompraClub | None:
+    """Devuelve una compra del club por su identificador."""
+    return db.get(CompraClub, compra_id)
+
+
+def obtener_item(db: Session, item_id: int) -> CompraItem | None:
+    """Devuelve un ítem de compra por su identificador."""
+    return db.get(CompraItem, item_id)
+
+
+def items_de_compra(db: Session, compra_id: int) -> list[CompraItem]:
+    """Lista los ítems de una compra."""
+    return list(
+        db.scalars(
+            select(CompraItem)
+            .where(CompraItem.compra_id == compra_id)
+            .order_by(CompraItem.id)
+        )
+    )
+
+
+def obtener_cargo(db: Session, cargo_id: int) -> CargoAlumno | None:
+    """Devuelve un cargo a alumno por su identificador."""
+    return db.get(CargoAlumno, cargo_id)
+
+
+def listar_cargos(
+    db: Session, *, miembro_id: int | None = None, estado: str | None = None
+) -> list[CargoAlumno]:
+    """Lista los cargos a alumnos, del más reciente al más antiguo."""
+    consulta = select(CargoAlumno).order_by(
+        CargoAlumno.fecha.desc(), CargoAlumno.id.desc()
+    )
+    if miembro_id is not None:
+        consulta = consulta.where(CargoAlumno.miembro_id == miembro_id)
+    if estado:
+        consulta = consulta.where(CargoAlumno.estado == estado)
+    return list(db.scalars(consulta))
+
+
+def guardar_cargo(db: Session, cargo: CargoAlumno) -> CargoAlumno:
+    """Confirma los cambios de un cargo a alumno."""
+    db.add(cargo)
+    db.commit()
+    db.refresh(cargo)
+    return cargo

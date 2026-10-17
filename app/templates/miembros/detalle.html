@@ -7,7 +7,15 @@
 {% block panel %}
 <div class="flex flex-wrap items-baseline justify-between gap-2">
   <h1 class="text-2xl font-bold">{{ miembro.nombre_completo }}</h1>
-  <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+  <div class="flex flex-wrap items-center gap-3">
+    <a href="/reportes/informe/{{ miembro.id }}"
+       class="text-sm text-gray-600 hover:text-marca-rojo">Informe calendario</a>
+    <a href="/miembros/{{ miembro.id }}/pagos/nuevo"
+       class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+      Registrar pago
+    </a>
+    <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+  </div>
 </div>
 
 {# Resumen de la ficha y del estado del miembro. #}

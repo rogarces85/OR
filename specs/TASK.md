@@ -238,27 +238,27 @@
 
 ### 5.C · Pagos (F-08, F-11, F-12, F-13, F-14)
 
-- [ ] **T5.11 · Formulario de pago personalizado (UI-07)**
+- [x] **T5.11 · Formulario de pago personalizado (UI-07)**
   - Qué: monto libre, selección de **año** y **meses**, medio (transferencia/efectivo excepcional) y **cuadro de observaciones**.
   - Verificación: el formulario permite ingresar un monto y seleccionar año/meses y guardar observaciones (CA-31).
   - Relación: F-12, F-14, F-26, D-20.
-- [ ] **T5.12 · Registro de pago atómico**
+- [x] **T5.12 · Registro de pago atómico**
   - Qué: `registrar_pago` valida y persiste el pago y sus imputaciones en una **única transacción**.
   - Verificación: si la imputación falla, no queda un pago parcial guardado.
   - Relación: F-08, `PLAN.md` §7, §9.
-- [ ] **T5.13 · Imputación del monto (deuda antigua → mes/año → abono)**
+- [x] **T5.13 · Imputación del monto (deuda antigua → mes/año → abono)**
   - Qué: aplicar el orden de imputación definido.
   - Verificación: un pago de 45.000 con deuda de 30.000 del año anterior salda esa deuda y cubre meses del año y deja saldo (CA-22).
   - Relación: F-13, RN-17, D-14.
-- [ ] **T5.14 · Abono y aplicación automática**
+- [x] **T5.14 · Abono y aplicación automática**
   - Qué: generar abono cuando el excedente no alcanza una cuota y aplicarlo automáticamente a la siguiente.
   - Verificación: el saldo a favor se aplica solo a la próxima cuota (CA-23).
   - Relación: F-13, RN-18, D-15.
-- [ ] **T5.15 · Estado de cuenta e informe calendario (UI-06)**
+- [x] **T5.15 · Estado de cuenta e informe calendario (UI-06)**
   - Qué: ver cuotas pagadas, pendientes y exentas, con estado y monto en CLP, más el abono disponible.
   - Verificación: el estado refleja fielmente los pagos e imputaciones (CA-14).
   - Relación: F-11, F-21, D-4.
-- [ ] **T5.16 · Listado de ingresos con filtros (F-15)**
+- [x] **T5.16 · Listado de ingresos con filtros (F-15)**
   - Qué: filtrar ingresos por tipo de cuota y por estado del usuario.
   - Verificación: los resultados coinciden con el filtro aplicado (CA-06).
   - Relación: F-15.
@@ -273,76 +273,76 @@
   - Qué: verde (al día), naranjo (≤3 meses), rojo (>3 meses).
   - Verificación: cada caso de prueba se clasifica en el color correcto (CA-24).
   - Relación: F-22, RN-21, D-17.
-- [ ] **T5.19 · Panel de morosidad (UI-08)**
+- [x] **T5.19 · Panel de morosidad (UI-08)**
   - Qué: listado de morosos con color, monto y meses, con selección para acciones.
   - Verificación: los morosos se muestran resaltados por color.
   - Relación: F-22, UI-08.
-- [ ] **T5.20 · Aviso y plantilla de correo (mailto)**
+- [x] **T5.20 · Aviso y plantilla de correo (mailto)**
   - Qué: generar el aviso para el Tesorero y armar el texto con datos del alumno, detalle de morosidad, adeudado y datos de cuenta; ofrecer enlace **mailto:** y marcar como enviado.
   - Verificación: el sistema **no** envía correo automático; el Tesorero dispone del texto y el aviso pasa a "enviado" al marcarlo (CA-15, CA-30).
   - Relación: F-23, RN-13, D-21, P-2.
 
 ### 5.E · Negociación de deuda (F-24)
 
-- [ ] **T5.21 · Regla de elegibilidad y cálculo del descuento**
+- [x] **T5.21 · Regla de elegibilidad y cálculo del descuento**
   - Qué: permitir negociar solo a morosos de **más de 6 meses** y calcular el monto con un **% editable** (0–100).
   - Verificación: un moroso de <6 meses es bloqueado; el monto negociado respeta el % (CA-25).
   - Relación: F-24, RN-22, D-18.
-- [ ] **T5.22 · Crear y aceptar negociación + efecto en el color**
+- [x] **T5.22 · Crear y aceptar negociación + efecto en el color**
   - Qué: registrar la negociación (propuesta/aceptada/pagada); al pasar a "aceptada", esa deuda deja de contar para el color.
   - Verificación: en "aceptada" el color se recalcula sin esa deuda; en "propuesta" sigue contando (P-6).
   - Depende de: T5.18.
-- [ ] **T5.23 · Registro de pago de una negociación**
+- [x] **T5.23 · Registro de pago de una negociación**
   - Qué: al pagar, descargar la deuda negociada y actualizar el estado.
   - Verificación: la deuda queda saldada parcial o totalmente.
 
 ### 5.F · Finanzas (F-16, F-17, F-18)
 
-- [ ] **T5.24 · Categorías de egreso (base + personalizadas)**
+- [x] **T5.24 · Categorías de egreso (base + personalizadas)**
   - Qué: mantener la base fija, permitir crear personalizadas y activar/desactivar categorías.
   - Verificación: se puede registrar un egreso con categoría base o personalizada (CA-07).
   - Relación: F-16, RN-10, D-5, D-12, P-7.
-- [ ] **T5.25 · Registro de egresos**
+- [x] **T5.25 · Registro de egresos**
   - Qué: alta de egresos con monto, fecha, concepto y categoría.
   - Verificación: el egreso queda guardado y asociado a su categoría.
   - Relación: F-16.
-- [ ] **T5.26 · Registro de adquisición de activos**
+- [x] **T5.26 · Registro de adquisición de activos**
   - Qué: registrar compra de bienes con costo y miembro encargado de gestionar la compra.
   - Verificación: el activo queda registrado con ambos datos (CA-08).
   - Relación: F-17, D-9.
-- [ ] **T5.27 · Registro de gastos fijos operativos**
+- [x] **T5.27 · Registro de gastos fijos operativos**
   - Qué: registrar costos mensuales recurrentes.
   - Verificación: el gasto fijo se refleja como egreso recurrente (CA-09).
   - Relación: F-18, RN-12.
-- [ ] **T5.28 · Listado y filtros de egresos**
+- [x] **T5.28 · Listado y filtros de egresos**
   - Qué: listar egresos filtrados por categoría y por periodo.
   - Verificación: los resultados coinciden con los filtros.
 
 ### 5.G · Compras y cobro a alumnos (F-25)
 
-- [ ] **T5.29 · Registro de compras del club y sus ítems**
+- [x] **T5.29 · Registro de compras del club y sus ítems**
   - Qué: registrar la compra (como pago/depósito) con sus ítems y montos.
   - Verificación: la compra y sus ítems quedan guardados.
   - Relación: F-25.
-- [ ] **T5.30 · Generación de cargos a alumnos (cargo separado)**
+- [x] **T5.30 · Generación de cargos a alumnos (cargo separado)**
   - Qué: asociar ítems a alumnos y generar cargos **separados** que no afectan la morosidad de cuotas.
   - Verificación: cada alumno recibe su cargo y su color de mora de cuotas no cambia (CA-27).
   - Relación: F-25, RN-23, D-19.
-- [ ] **T5.31 · Saldar un cargo de alumno**
+- [x] **T5.31 · Saldar un cargo de alumno**
   - Qué: registrar el pago del cargo y marcarlo como pagado.
   - Verificación: el cargo pasa a "pagado" y refleja el monto.
 
 ### 5.H · Reportes e informes (F-19, F-20, F-21)
 
-- [ ] **T5.32 · Reporte consolidado por periodo**
+- [x] **T5.32 · Reporte consolidado por periodo**
   - Qué: totalizar ingresos, egresos y diferencia para un rango de fechas.
   - Verificación: los totales coinciden con la suma de los movimientos (CA-10).
   - Relación: F-19.
-- [ ] **T5.33 · Informe calendario por miembro**
+- [x] **T5.33 · Informe calendario por miembro**
   - Qué: informe mensual con estado y monto, visible por el miembro (lectura) y por Admin/Tesorero.
   - Verificación: el informe distingue pagadas, pendientes y exentas (CA-14).
   - Relación: F-21, D-4.
-- [ ] **T5.34 · Selección de periodo y vista de reportes (UI-09)**
+- [x] **T5.34 · Selección de periodo y vista de reportes (UI-09)**
   - Qué: seleccionar el rango y presentar los totales.
   - Verificación: cambiar el rango recalcula el reporte.
   - Relación: UI-09.
@@ -351,22 +351,22 @@
 
 ## Fase 6 — Validaciones y manejo de errores
 
-- [ ] **T6.1 · Esquemas Pydantic por formulario**
+- [x] **T6.1 · Esquemas Pydantic por formulario**
   - Qué: definir esquemas de entrada con campos obligatorios y tipos (montos enteros positivos, correo válido, fechas).
   - Verificación: un formulario con datos inválidos no se guarda y explica el motivo (CA-21).
   - Relación: `PLAN.md` §10.
-- [ ] **T6.2 · Validación de reglas de negocio en los servicios**
+- [x] **T6.2 · Validación de reglas de negocio en los servicios**
   - Qué: aplicar activación completa, unicidad de pago por ciclo, rango de descuento, elegibilidad de negociación, exención y categoría válida.
   - Verificación: cada regla rechaza el caso inválido con mensaje claro.
   - Relación: RN-02, RN-08, RN-10, RN-22.
-- [ ] **T6.3 · Manejo centralizado de errores (`core/errores.py`)**
+- [x] **T6.3 · Manejo centralizado de errores (`core/errores.py`)**
   - Qué: respuestas y páginas para 400, 403, 404 y 409, con mensajes en español correcto.
   - Verificación: cada código muestra una página/mensaje adecuado (CA-13, CA-21).
   - Relación: RN-16, `PLAN.md` §10.
-- [ ] **T6.4 · Cubrir los casos límite de `SPECS.md` §9**
+- [x] **T6.4 · Cubrir los casos límite de `SPECS.md` §9**
   - Subtareas: datos vacíos/incompletos · datos inválidos · duplicados (email y pago por ciclo) · monto personalizado que genera abono o deuda · selección de meses inválida · pago a exento · pago posterior al día 5 · impago · negociación <6 meses · descuento fuera de rango · reporte sin datos ("sin movimientos") · exportación vacía · categoría inexistente · acceso no autorizado · operación no permitida por estado.
   - Verificación: cada caso se comporta como describe la especificación.
-- [ ] **T6.5 · Retroalimentación en todos los formularios**
+- [x] **T6.5 · Retroalimentación en todos los formularios**
   - Qué: confirmaciones y errores visibles mediante el parcial de alertas.
   - Verificación: cada acción devuelve un mensaje claro.
   - Relación: UI-12.

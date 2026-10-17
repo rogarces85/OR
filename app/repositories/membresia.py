@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from datetime import date
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.membresia import (
+    ESTADO_ACEPTADA,
     ESTADO_EXENTA,
+    ESTADO_NEGOCIACION_PAGADA,
+    ESTADO_PARCIAL,
     ESTADO_PENDIENTE,
+    ESTADO_PROPUESTA,
     NIVEL_ACTIVA,
     NIVEL_MATRICULA,
     NIVEL_POR_CATEGORIA,
@@ -196,3 +202,114 @@ def guardar(db: Session, cuota: CuotaMensual) -> CuotaMensual:
     db.commit()
     db.refresh(cuota)
     return cuota
+
+
+# --------------------------------------------------------------------------- #
+# Imputación de pagos y abonos (F-13, RN-17, RN-18)
+# --------------------------------------------------------------------------- #
+
+# Estados en los que una cuota aún tiene saldo por cubrir.
+ESTADOS_IMPAGOS: tuple[str, ...] = (ESTADO_PENDIENTE, ESTADO_PARCIAL)
+
+
+def cuotas_impagas(db: Session, miembro_id: int) -> list[CuotaMensual]:
+    """Cuotas no pagadas de un miembro, de la más antigua a la más reciente.
+
+    Incluye la Matrícula para que el pago inicial cubra la obligación completa
+    (Matrícula + la cuota de la categoría; Flujo 1, RN-17).
+    """
+    return list(
+        db.scalars(
+            select(CuotaMensual)
+            .where(
+                CuotaMensual.miembro_id == miembro_id,
+                CuotaMensual.estado.in_(ESTADOS_IMPAGOS),
+            )
+            .order_by(
+                CuotaMensual.anio, CuotaMensual.mes, CuotaMensual.nivel_cuota_id
+            )
+        )
+    )
+
+
+def siguiente_cuota_impaga(db: Session, miembro_id: int) -> CuotaMensual | None:
+    """Primera cuota **mensual** impaga de un miembro (destino del abono, RN-18)."""
+    return db.scalar(
+        select(CuotaMensual)
+        .join(NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id)
+        .where(
+            CuotaMensual.miembro_id == miembro_id,
+            CuotaMensual.estado.in_(ESTADOS_IMPAGOS),
+            NivelCuota.tipo == TIPO_MENSUAL,
+        )
+        .order_by(CuotaMensual.anio, CuotaMensual.mes)
+    )
+
+
+def deuda_negociada_clp(db: Session, miembro_id: int) -> int:
+    """Deuda excluida del color por negociaciones aceptadas o pagadas (P-6)."""
+    total = db.scalar(
+        select(func.coalesce(func.sum(NegociacionDeuda.deuda_total_clp), 0)).where(
+            NegociacionDeuda.miembro_id == miembro_id,
+            NegociacionDeuda.estado.in_(
+                (ESTADO_ACEPTADA, ESTADO_NEGOCIACION_PAGADA)
+            ),
+        )
+    )
+    return int(total or 0)
+
+
+# --------------------------------------------------------------------------- #
+# Negociaciones de deuda (F-24)
+# --------------------------------------------------------------------------- #
+
+
+def obtener_negociacion(db: Session, negociacion_id: int) -> NegociacionDeuda | None:
+    """Devuelve una negociación por su identificador."""
+    return db.get(NegociacionDeuda, negociacion_id)
+
+
+def listar_negociaciones(
+    db: Session, *, miembro_id: int | None = None
+) -> list[NegociacionDeuda]:
+    """Lista las negociaciones registradas, de la más reciente a la más antigua."""
+    consulta = select(NegociacionDeuda).order_by(
+        NegociacionDeuda.fecha.desc(), NegociacionDeuda.id.desc()
+    )
+    if miembro_id is not None:
+        consulta = consulta.where(NegociacionDeuda.miembro_id == miembro_id)
+    return list(db.scalars(consulta))
+
+
+def crear_negociacion(
+    db: Session,
+    *,
+    miembro_id: int,
+    deuda_total_clp: int,
+    descuento_pct: int,
+    monto_negociado_clp: int,
+    fecha: date | None = None,
+    usuario_id: int | None = None,
+) -> NegociacionDeuda:
+    """Registra una negociación de deuda en estado "propuesta" (F-24)."""
+    negociacion = NegociacionDeuda(
+        miembro_id=miembro_id,
+        deuda_total_clp=deuda_total_clp,
+        descuento_pct=descuento_pct,
+        monto_negociado_clp=monto_negociado_clp,
+        fecha=fecha or date.today(),
+        usuario_id=usuario_id,
+        estado=ESTADO_PROPUESTA,
+    )
+    db.add(negociacion)
+    return negociacion
+
+
+def guardar_negociacion(
+    db: Session, negociacion: NegociacionDeuda
+) -> NegociacionDeuda:
+    """Confirma los cambios de una negociación."""
+    db.add(negociacion)
+    db.commit()
+    db.refresh(negociacion)
+    return negociacion

@@ -16,7 +16,6 @@ from pydantic import (
     ConfigDict,
     EmailStr,
     Field,
-    ValidationError,
     field_validator,
 )
 
@@ -75,37 +74,3 @@ class MiembroEntrada(BaseModel):
             raise ValueError("Ingresa un teléfono válido.")
         return valor
 
-
-def mensajes_por_campo(error: ValidationError) -> dict[str, str]:
-    """Traduce los errores de Pydantic a mensajes en español por campo (CA-16)."""
-    mensajes: dict[str, str] = {}
-    for detalle in error.errors():
-        ubicacion = detalle.get("loc") or ()
-        campo = str(ubicacion[0]) if ubicacion else "formulario"
-        if campo in mensajes:
-            continue
-        mensajes[campo] = _texto_de_error(campo, detalle)
-    return mensajes
-
-
-def _texto_de_error(campo: str, detalle: dict) -> str:
-    """Construye el mensaje en español de un error de validación."""
-    tipo = str(detalle.get("type", ""))
-    if tipo == "missing":
-        return "Este campo es obligatorio."
-    entrada = detalle.get("input")
-    if isinstance(entrada, str) and not entrada.strip():
-        return "Este campo es obligatorio."
-    if tipo == "string_too_short":
-        minimo = (detalle.get("ctx") or {}).get("min_length", 1)
-        return f"Debe tener al menos {minimo} caracteres."
-    if tipo == "string_too_long":
-        maximo = (detalle.get("ctx") or {}).get("max_length", 1)
-        return f"No puede superar los {maximo} caracteres."
-    if tipo.startswith("date_"):
-        return "Ingresa una fecha válida (formato AAAA-MM-DD)."
-    if campo == "email":
-        return "Ingresa un correo electrónico válido."
-    if tipo == "value_error":
-        return str(detalle.get("msg", "")).replace("Value error, ", "")
-    return "El valor ingresado no es válido."

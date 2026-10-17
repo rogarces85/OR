@@ -1,0 +1,127 @@
+{% extends "panel/base_panel.html" %}
+{% import "parciales/macros.html" as m %}
+
+{% block titulo %}Negociaciones · {{ app_name }}{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-baseline justify-between gap-2">
+  <h1 class="text-2xl font-bold">Negociación de deuda</h1>
+</div>
+<p class="mt-1 text-sm text-gray-500">
+  Solo los morosos de más de 6 meses pueden negociar (RN-22). Al aceptar la
+  negociación, esa deuda deja de contar para el color (P-6).
+</p>
+
+{# Morosos elegibles para negociar (T5.21). #}
+<h2 class="mt-8 text-lg font-semibold">Morosos elegibles (más de 6 meses)</h2>
+<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Miembro</th>
+        <th scope="col" class="px-4 py-3">Clasificación</th>
+        <th scope="col" class="px-4 py-3 text-right">Deuda</th>
+        <th scope="col" class="px-4 py-3">Proponer negociación</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for miembro, informacion in elegibles %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">
+            <a href="/miembros/{{ miembro.id }}" class="font-medium hover:text-marca-rojo">
+              {{ miembro.nombre_completo }}
+            </a>
+          </td>
+          <td class="px-4 py-3">{{ m.etiqueta_morosidad(informacion.color, informacion.meses_deuda) }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ informacion.monto_deuda_clp | clp }}</td>
+          <td class="px-4 py-3">
+            <form method="post" action="/negociaciones" class="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="miembro_id" value="{{ miembro.id }}">
+              <label class="flex items-center gap-1 text-xs text-gray-600">
+                Descuento
+                <input name="descuento_pct" type="number" min="0" max="100" value="0"
+                       class="w-16 rounded border border-gray-300 px-2 py-1 text-sm focus:border-marca-rojo focus:outline-none">
+                %
+              </label>
+              <button type="submit"
+                      class="rounded bg-marca-negro px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-gray-800">
+                Proponer
+              </button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+            No hay morosos de más de 6 meses para negociar.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Negociaciones registradas (T5.22, T5.23). #}
+<h2 class="mt-8 text-lg font-semibold">Negociaciones registradas</h2>
+<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
+  <table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+      <tr>
+        <th scope="col" class="px-4 py-3">Fecha</th>
+        <th scope="col" class="px-4 py-3">Miembro</th>
+        <th scope="col" class="px-4 py-3 text-right">Deuda</th>
+        <th scope="col" class="px-4 py-3 text-right">Desc.</th>
+        <th scope="col" class="px-4 py-3 text-right">Monto negociado</th>
+        <th scope="col" class="px-4 py-3">Estado</th>
+        <th scope="col" class="px-4 py-3 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      {% for negociacion in negociaciones %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3">{{ negociacion.fecha.strftime("%d/%m/%Y") }}</td>
+          <td class="px-4 py-3">{{ negociacion.miembro.nombre_completo }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ negociacion.deuda_total_clp | clp }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">{{ negociacion.descuento_pct }}%</td>
+          <td class="px-4 py-3 text-right tabular-nums">$ {{ negociacion.monto_negociado_clp | clp }}</td>
+          <td class="px-4 py-3">{{ estados.get(negociacion.estado, negociacion.estado) }}</td>
+          <td class="px-4 py-3 text-right">
+            {% if negociacion.estado == "propuesta" %}
+              <form method="post" action="/negociaciones/{{ negociacion.id }}/aceptar" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit"
+                        class="rounded bg-marca-rojo px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-red-700">
+                  Aceptar
+                </button>
+              </form>
+            {% elif negociacion.estado == "aceptada" %}
+              <form method="post" action="/negociaciones/{{ negociacion.id }}/pagar"
+                    class="inline-flex items-center gap-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <select name="medio"
+                        class="rounded border border-gray-300 px-2 py-1 text-xs focus:border-marca-rojo focus:outline-none">
+                  <option value="transferencia">Transferencia</option>
+                  <option value="efectivo">Efectivo</option>
+                </select>
+                <button type="submit"
+                        class="rounded bg-marca-negro px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-gray-800">
+                  Registrar pago
+                </button>
+              </form>
+            {% else %}
+              <span class="text-xs text-green-700">Regularizada</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+            Todavía no hay negociaciones registradas.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
