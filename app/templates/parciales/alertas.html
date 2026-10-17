@@ -1,0 +1,17 @@
+{# Parcial reutilizable de mensajes de éxito y error (UI-12, T4.11). #}
+{% set alertas = [] %}
+{% if flash %}{% set _ = alertas.append(flash) %}{% endif %}
+{% if mensajes %}{% set _ = alertas.extend(mensajes) %}{% endif %}
+
+{% for alerta in alertas %}
+  {% set es_error = alerta.tipo == "error" %}
+  <div role="alert"
+       class="mb-4 rounded-md border px-4 py-3 text-sm
+              {% if es_error %}
+                border-morosidad-rojo/40 bg-morosidad-rojo/10 text-red-800
+              {% else %}
+                border-morosidad-verde/40 bg-morosidad-verde/10 text-green-800
+              {% endif %}">
+    {{ alerta.texto }}
+  </div>
+{% endfor %}

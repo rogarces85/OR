@@ -1,10 +1,33 @@
+{# Header del sistema con navegación según el rol del usuario (T4.6). #}
 <header class="bg-marca-negro text-marca-blanco">
   <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
     <a href="/" class="text-lg font-bold tracking-tight">
       Osorno <span class="text-marca-rojo">Runners</span>
     </a>
-    <nav class="text-sm">
-      <a href="/salud" class="transition-colors hover:text-marca-rojo">Estado del sistema</a>
+
+    <nav class="flex items-center gap-5 text-sm">
+      {% if sesion.autenticado %}
+        {% if sesion.rol in ("admin", "tesorero") %}
+          <a href="/miembros" class="transition-colors hover:text-marca-rojo">Miembros</a>
+        {% else %}
+          <a href="/mi/estado" class="transition-colors hover:text-marca-rojo">Mi estado de cuenta</a>
+        {% endif %}
+
+        <span class="hidden text-marca-blanco/60 sm:inline">{{ sesion.nombre }}</span>
+
+        <form method="post" action="/salir" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit"
+                  class="rounded border border-white/30 px-3 py-1.5 font-medium transition-colors hover:bg-white/10">
+            Salir
+          </button>
+        </form>
+      {% else %}
+        <a href="/ingresar"
+           class="rounded bg-marca-rojo px-4 py-2 font-medium transition-colors hover:bg-red-700">
+          Ingresar
+        </a>
+      {% endif %}
     </nav>
   </div>
 </header>

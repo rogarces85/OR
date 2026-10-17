@@ -1,0 +1,29 @@
+{# Macros reutilizables, incluidos los estilos de morosidad (F-22, T4.13). #}
+
+{% macro etiqueta_morosidad(color, meses) %}
+  {% if color == "verde" %}
+    {% set etiqueta = "Al día" %}
+    {% set clases = "bg-morosidad-verde/15 text-green-700 ring-1 ring-morosidad-verde/30" %}
+    {% set punto = "bg-morosidad-verde" %}
+  {% elif color == "naranjo" %}
+    {% set etiqueta = "Deuda de hasta 3 meses" %}
+    {% set clases = "bg-morosidad-naranjo/15 text-amber-700 ring-1 ring-morosidad-naranjo/30" %}
+    {% set punto = "bg-morosidad-naranjo" %}
+  {% else %}
+    {% set etiqueta = "Deuda de más de 3 meses" %}
+    {% set clases = "bg-morosidad-rojo/15 text-red-700 ring-1 ring-morosidad-rojo/30" %}
+    {% set punto = "bg-morosidad-rojo" %}
+  {% endif %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium {{ clases }}">
+    <span class="h-2 w-2 rounded-full {{ punto }}"></span>
+    {{ etiqueta }}{% if meses %} · {{ meses }} mes{{ "" if meses == 1 else "es" }}{% endif %}
+  </span>
+{% endmacro %}
+
+
+{% macro etiqueta_exento() %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+    <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+    Exento
+  </span>
+{% endmacro %}

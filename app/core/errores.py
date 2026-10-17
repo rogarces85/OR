@@ -1,7 +1,7 @@
 """Manejo de errores con páginas propias.
 
-Versión base (H1). En la Fase de calidad (T6.3) se amplía con los códigos
-400, 403, 404 y 409 y mensajes uniformes.
+Cubre la página de "acceso denegado" (T4.4). En la fase de calidad (T6.3) se
+completa con los códigos 400 y 409 y mensajes uniformes.
 """
 
 from __future__ import annotations
@@ -24,7 +24,16 @@ def _render_error(
 
 
 def registrar_manejadores(app: FastAPI) -> None:
-    """Registra las páginas de error base de la aplicación."""
+    """Registra las páginas de error de la aplicación."""
+
+    @app.exception_handler(403)
+    async def acceso_denegado(request: Request, _exc: Exception) -> HTMLResponse:
+        return _render_error(
+            request,
+            403,
+            "Acceso denegado",
+            "No tienes permisos para acceder a esta sección.",
+        )
 
     @app.exception_handler(404)
     async def no_encontrado(request: Request, _exc: Exception) -> HTMLResponse:

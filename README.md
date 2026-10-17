@@ -49,7 +49,16 @@ Copy-Item .env.example .env
 
 # 6. Compilar Tailwind
 npm run css:build
+
+# 7. Crear el esquema y cargar la semilla (idempotente)
+.\venv\Scripts\python.exe -m app.seed
 ```
+
+La semilla (paso 7) crea el catálogo de cuotas (5.000 / 5.000 / 15.000 CLP), las
+categorías de egreso base, la cuenta bancaria para transferencias, la plantilla
+de correo y un conjunto de miembros de ejemplo en los cuatro estados de
+morosidad. Volver a ejecutarla **no duplica datos** e imprime las credenciales de
+prueba (Admin, Tesorero y un Miembro).
 
 ## Configuración
 

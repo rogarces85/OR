@@ -85,43 +85,43 @@
 
 ## Fase 3 — Modelos de datos y persistencia
 
-- [ ] **T3.1 · Modelo `Usuario` (`models/usuario.py`)**
+- [x] **T3.1 · Modelo `Usuario` (`models/usuario.py`)**
   - Qué: `id`, `email` (único), `password_hash`, `rol`, `activo`, `creado_en`.
   - Verificación: la tabla se crea y un registro de prueba se inserta/lee.
   - Relación: F-02, D-7.
-- [ ] **T3.2 · Modelos `Miembro` e `HistorialCategoria` (`models/miembro.py`)**
+- [x] **T3.2 · Modelos `Miembro` e `HistorialCategoria` (`models/miembro.py`)**
   - Qué: ficha ampliada (nombre, email único, teléfono, RUT, fecha de nacimiento, dirección, contacto de emergencia), `fecha_incorporacion`, `categoria`, `situacion_activacion`, `condicion_especial`, `motivo_exencion`, `usuario_id`; e historial de cambios de categoría.
   - Verificación: las tablas se crean y respetan la unicidad de email.
   - Relación: F-01, F-05, RN-11, RN-14.
-- [ ] **T3.3 · Modelos `NivelCuota` y `CuotaMensual` (`models/membresia.py`)**
+- [x] **T3.3 · Modelos `NivelCuota` y `CuotaMensual` (`models/membresia.py`)**
   - Qué: catálogo de cuotas (código, monto, tipo) y cuota mensual por miembro/periodo con estado y montos; incluir aquí `NegociacionDeuda` (deuda, descuento %, monto negociado, estado).
   - Verificación: las tablas se crean y permiten asociar cuotas a un miembro.
   - Relación: F-06, F-10, F-24.
-- [ ] **T3.4 · Modelos `Pago`, `ImputacionPago` y `Abono` (`models/pago.py`)**
+- [x] **T3.4 · Modelos `Pago`, `ImputacionPago` y `Abono` (`models/pago.py`)**
   - Qué: pago (monto, fecha, medio, observaciones, registrado por), imputación (pago↔cuota, monto, orden) y abono (saldo disponible).
   - Verificación: las tablas se crean y las relaciones se mantienen.
   - Relación: F-08, F-12, F-13.
-- [ ] **T3.5 · Modelos `CategoriaEgreso`, `Egreso` y `GastoFijo` (`models/finanzas.py`)**
+- [x] **T3.5 · Modelos `CategoriaEgreso`, `Egreso` y `GastoFijo` (`models/finanzas.py`)**
   - Qué: categorías (base/personalizada, activo), egresos (monto, fecha, concepto, categoría, tipo, miembro responsable) y gastos fijos.
   - Verificación: las tablas se crean y un egreso se asocia a una categoría.
   - Relación: F-16, F-17, F-18, RN-10.
-- [ ] **T3.6 · Modelos `CompraClub`, `CompraItem` y `CargoAlumno` (`models/compras.py`)**
+- [x] **T3.6 · Modelos `CompraClub`, `CompraItem` y `CargoAlumno` (`models/compras.py`)**
   - Qué: compras del club, ítems y cargos a alumnos (cargo separado, estado, pago asociado).
   - Verificación: una compra con ítems genera cargos a distintos alumnos.
   - Relación: F-25, RN-23.
-- [ ] **T3.7 · Modelos de configuración y comunicación (`models/configuracion.py`)**
+- [x] **T3.7 · Modelos de configuración y comunicación (`models/configuracion.py`)**
   - Qué: `CuentaBancaria`, `PlantillaCorreo` y `AvisoMorosidad`.
   - Verificación: las tablas se crean y la cuenta/plantilla se guardan.
   - Relación: F-23, F-26, D-21, D-22.
-- [ ] **T3.8 · Crear repositorios base por entidad (`repositories/`)**
+- [x] **T3.8 · Crear repositorios base por entidad (`repositories/`)**
   - Qué: capa de acceso a datos (altas, búsquedas y filtros frecuentes) usada por los servicios.
   - Verificación: los servicios no acceden al ORM directamente (revisión de código).
   - Relación: `PLAN.md` §1, §9.
-- [ ] **T3.9 · Crear la semilla (seed) inicial**
+- [x] **T3.9 · Crear la semilla (seed) inicial**
   - Qué: niveles de cuota (Matrícula 5.000, Estándar 5.000, Activa 15.000), categorías base de egreso (Activos, Gastos fijos, Transferencias, Tarjeta, Otros), cuenta bancaria, plantilla de correo y un usuario Admin.
   - Verificación: ejecutar la semilla deja esos datos disponibles y es **idempotente**.
   - Relación: F-06, D-12, D-22, RN-01.
-- [ ] **T3.10 · Script reproducible de esquema + semilla**
+- [x] **T3.10 · Script reproducible de esquema + semilla**
   - Qué: comando único para crear el esquema y cargar la semilla en un entorno nuevo.
   - Verificación: en una base vacía, el comando deja el sistema listo para operar.
   - Depende de: T2.4, T3.9.
@@ -132,27 +132,27 @@
 
 ### 4.A · Seguridad y sesiones
 
-- [ ] **T4.1 · Implementar hash de contraseñas (`core/seguridad.py`)**
+- [x] **T4.1 · Implementar hash de contraseñas (`core/seguridad.py`)**
   - Qué: `hash_password` y `verify_password` con bcrypt/argon2.
   - Verificación: una prueba confirma que el hash no es reversible y la verificación es correcta.
   - Relación: `PLAN.md` §11.
-- [ ] **T4.2 · Configurar sesiones firmadas**
+- [x] **T4.2 · Configurar sesiones firmadas**
   - Qué: `SessionMiddleware` con cookie `HttpOnly` y `SameSite`; helpers `iniciar_sesion`/`cerrar_sesion`/`usuario_actual`.
   - Verificación: tras iniciar sesión, la sesión persiste entre peticiones.
   - Nota: esquema **confirmado** (Q-2): sesión firmada `HttpOnly` + `SameSite=Lax`.
-- [ ] **T4.3 · Rutas de login y logout**
+- [x] **T4.3 · Rutas de login y logout**
   - Qué: formulario de acceso (UI-02), validación de credenciales y cierre de sesión.
   - Verificación: credenciales válidas acceden; inválidas muestran error sin revelar datos.
   - Relación: F-02, CA-21.
-- [ ] **T4.4 · Dependencia de autorización por rol (`requiere_rol`)**
+- [x] **T4.4 · Dependencia de autorización por rol (`requiere_rol`)**
   - Qué: restringir rutas por rol; Admin y Tesorero con permisos iguales; Miembro restringido.
   - Verificación: un miembro recibe "acceso denegado" al intentar entrar a módulos financieros.
   - Relación: F-03, RN-07, CA-12, CA-13.
-- [ ] **T4.5 · Protección CSRF en formularios de escritura**
+- [x] **T4.5 · Protección CSRF en formularios de escritura**
   - Qué: token CSRF incluido en formularios POST y validado en el servidor.
   - Verificación: un POST sin token válido se rechaza.
   - Nota: confirmado como parte del esquema de seguridad (Q-2).
-- [ ] **T4.6 · Navegación por rol en el layout**
+- [x] **T4.6 · Navegación por rol en el layout**
   - Qué: menú y accesos visibles según el rol del usuario autenticado.
   - Verificación: el Admin/Tesorero ve los módulos de gestión; el Miembro solo su estado de cuenta.
 
@@ -166,22 +166,22 @@
   - Qué: menú móvil, acordeón de "Cómo funciona" y modales.
   - Verificación: los componentes funcionan en escritorio y móvil.
   - Depende de: T2.7, T4.7.
-- [ ] **T4.9 · Shell del panel Admin/Tesorero (UI-03)**
+- [x] **T4.9 · Shell del panel Admin/Tesorero (UI-03)**
   - Qué: estructura de las vistas de gestión (miembros, membresías, pagos, morosidad, negociación, finanzas, compras, reportes).
   - Verificación: el panel carga con navegación y zona de contenido.
   - Relación: UI-03, UI-04.
-- [ ] **T4.10 · Shell de la vista del Miembro (UI-05)**
+- [x] **T4.10 · Shell de la vista del Miembro (UI-05)**
   - Qué: vista restringida con perfil, estado de cuenta y avisos propios.
   - Verificación: el miembro solo ve su información.
-- [ ] **T4.11 · Parcial de alertas y retroalimentación (UI-12)**
+- [x] **T4.11 · Parcial de alertas y retroalimentación (UI-12)**
   - Qué: componente reutilizable de mensajes de éxito/error en español correcto.
   - Verificación: los formularios muestran confirmaciones y errores con este parcial.
   - Relación: UI-12, RN-16.
-- [ ] **T4.12 · Utilidad y filtro de formato CLP (RN-24)**
+- [x] **T4.12 · Utilidad y filtro de formato CLP (RN-24)**
   - Qué: `core/formato.py` con `formatear_clp`/`parsear_clp` y un filtro Jinja para usarlo en plantillas.
   - Verificación: `45000` se muestra como `45.000` en la interfaz.
   - Relación: F-27, RN-24.
-- [ ] **T4.13 · Definir estilos de morosidad en Tailwind**
+- [x] **T4.13 · Definir estilos de morosidad en Tailwind**
   - Qué: clases/utilidades para verde/naranjo/rojo reutilizables en tablas y tarjetas.
   - Verificación: un dato de prueba se resalta con el color correspondiente.
   - Relación: F-22, D-17.
@@ -198,7 +198,7 @@
   - Qué: formulario y validación de la ficha ampliada; captura automática de `fecha_incorporacion` como fecha de alta.
   - Verificación: se crea un miembro completo y la fecha de incorporación queda registrada (CA-16).
   - Relación: F-01, RN-11, RN-14, D-3, D-6.
-- [ ] **T5.2 · Listado y búsqueda de miembros**
+- [x] **T5.2 · Listado y búsqueda de miembros**
   - Qué: listado con búsqueda/filtro (por estado, categoría, morosidad).
   - Verificación: el listado muestra los miembros y los filtros devuelven resultados coherentes.
 - [ ] **T5.3 · Edición de datos del miembro**
@@ -212,7 +212,7 @@
   - Qué: evaluar el pago inicial (Matrícula + cuota de la categoría) y activar al miembro.
   - Verificación: con pago parcial queda pendiente; con pago completo queda activo (CA-01).
   - Relación: F-07, RN-02, D-11.
-- [ ] **T5.6 · Vista del miembro (autoconsulta restringida)**
+- [x] **T5.6 · Vista del miembro (autoconsulta restringida)**
   - Qué: el miembro ve solo su perfil, estado de cuenta y avisos.
   - Verificación: no puede ver datos de otro miembro (CA-12).
   - Relación: F-04, RN-06.
@@ -265,11 +265,11 @@
 
 ### 5.D · Mora y avisos (F-22, F-23)
 
-- [ ] **T5.17 · Cálculo de morosidad (meses cerrados)**
+- [x] **T5.17 · Cálculo de morosidad (meses cerrados)**
   - Qué: calcular meses de deuda y monto considerando **solo meses cerrados**.
   - Verificación: el mes en curso no cuenta como deuda (P-5).
   - Relación: F-11, RN-04, P-5.
-- [ ] **T5.18 · Clasificación por color**
+- [x] **T5.18 · Clasificación por color**
   - Qué: verde (al día), naranjo (≤3 meses), rojo (>3 meses).
   - Verificación: cada caso de prueba se clasifica en el color correcto (CA-24).
   - Relación: F-22, RN-21, D-17.
