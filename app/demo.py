@@ -1,4 +1,4 @@
-"""Datos adicionales para el demo guiado (ver ``specs/DEMO.md``).
+"""Datos adicionales para el demo guiado (ver ``specs/GUIA_DEMO.md``).
 
 La semilla deja a **Carla Deudora** con 5 meses de deuda cerrada (color rojo).
 La negociación exige **más de 6 meses** (RN-22), así que este comando agrega dos

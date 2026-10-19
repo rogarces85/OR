@@ -445,25 +445,31 @@
 
 ## Fase 10 — Documentación y preparación final
 
-- [ ] **T10.1 · Completar el `README.md`**
+- [x] **T10.1 · Completar el `README.md`**
   - Qué: requisitos, instalación, configuración, semilla, ejecución y estructura.
   - Verificación: una persona puede levantar el proyecto siguiendo el README.
-- [ ] **T10.2 · Documentar `.env.example`**
+  - Evidencia: `README.md` (requisitos, tabla de variables, atajos, pruebas, estructura y estado).
+- [x] **T10.2 · Documentar `.env.example`**
   - Qué: describir cada variable (conexión, secreto, entorno).
   - Verificación: el archivo cubre todas las variables usadas.
-- [ ] **T10.3 · Guía de despliegue local (Uvicorn + XAMPP/MySQL)**
+  - Evidencia: `.env.example` documenta las 10 variables de la app y `TEST_DATABASE_URL`.
+- [x] **T10.3 · Guía de despliegue local (Uvicorn + XAMPP/MySQL)**
   - Qué: pasos de ejecución local y consideraciones de producción futura.
   - Verificación: la guía permite ejecutar el MVP localmente.
   - Relación: P-8.
-- [ ] **T10.4 · Revisión final de cobertura contra `SPECS.md`**
+  - Evidencia: `docs/DESPLIEGUE_LOCAL.md`.
+- [x] **T10.4 · Revisión final de cobertura contra `SPECS.md`**
   - Qué: comprobar que cada `F-` y `RN-` está implementado y cada `CA-` es verificable.
   - Verificación: matriz de cobertura sin faltantes.
-- [ ] **T10.5 · Validación end-to-end del MVP**
+  - Evidencia: `specs/COBERTURA.md` (F-01…F-29, RN-01…RN-26, CA-01…CA-31).
+- [x] **T10.5 · Validación end-to-end del MVP**
   - Qué: recorrido completo (alta → activación → pago → mora → negociación → egresos → compras → reportes → landing).
   - Verificación: el recorrido se completa sin errores.
-- [ ] **T10.6 · Registrar pendientes no bloqueantes**
+  - Evidencia: `tests/test_e2e_mvp.py` (incluido en las 132 pruebas).
+- [x] **T10.6 · Registrar pendientes no bloqueantes**
   - Qué: dejar constancia de la publicación productiva y los respaldos como trabajo **post-MVP** (Q-3).
   - Verificación: quedan documentados en el README o en `PLAN.md` §14.
+  - Evidencia: sección “Pendientes post-MVP” del `README.md` y `docs/DESPLIEGUE_LOCAL.md` §9.
 
 ---
 

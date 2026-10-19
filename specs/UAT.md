@@ -5,7 +5,9 @@
 > **Entorno:** Windows + Python del `venv`; suite sobre SQLite en memoria
 > (opcionalmente MySQL con `TEST_DATABASE_URL`).
 > **Comando:** `.\venv\Scripts\python.exe -m pytest`
-> **Resultado:** **131 pruebas aprobadas** (incluye las pruebas de optimización de la Fase 9) y `ruff check app tests` sin hallazgos.
+> **Resultado:** **132 pruebas aprobadas** (incluye las pruebas de optimización de la Fase 9 y el recorrido end-to-end de la Fase 10) y `ruff check app tests` sin hallazgos.
+> **MySQL:** 131 pruebas aprobadas y 1 omitida (el plan de consulta se verifica solo sobre SQLite); el recorrido end-to-end también pasa contra MySQL.
+> **Cobertura F/RN:** ver [`specs/COBERTURA.md`](COBERTURA.md).
 
 ## Matriz de cobertura
 
