@@ -11,8 +11,9 @@ Documentación oficial:
 - `specs/UAT.md` — matriz de aceptación CA-01 … CA-31.
 - `specs/COBERTURA.md` — matriz final de cobertura F / RN / CA.
 - `specs/GUIA_DEMO.md` — guion de demostración del MVP paso a paso.
-- `docs/DESPLIEGUE_LOCAL.md` — guía de ejecución local y consideraciones de
-  producción futura.
+- `docs/DESPLIEGUE_LOCAL.md` — guía de ejecución local.
+- `docs/POST_MVP.md` — plan de publicación productiva, HTTPS y respaldos
+  (documentado, no ejecutado).
 
 ## Stack
 
@@ -174,6 +175,7 @@ y [`specs/COBERTURA.md`](specs/COBERTURA.md).
 - El MVP está pensado para el **entorno local** (Uvicorn + MySQL de XAMPP).
   La publicación productiva, el proxy inverso/HTTPS y los respaldos quedan como
   trabajo **post-MVP** (Q-3). Ver
+  [`docs/POST_MVP.md`](docs/POST_MVP.md) y
   [`docs/DESPLIEGUE_LOCAL.md`](docs/DESPLIEGUE_LOCAL.md).
 
 ## Demo guiada
@@ -238,9 +240,13 @@ cobertura funcional en `specs/COBERTURA.md`.
 | 8 · Pruebas y revisión | ✅ Completada |
 | 9 · Optimización básica | ✅ Completada |
 | 10 · Documentación y preparación final | ✅ Completada |
-| Post-MVP · Publicación productiva y respaldos | ⏳ Pendiente (Q-3) |
+| Post-MVP · Publicación productiva, HTTPS y respaldos | 📋 Plan cerrado; ejecución pendiente |
 
-### Pendientes post-MVP (no bloqueantes, Q-3)
+### Post-MVP documentado (no ejecutado, Q-3)
+
+El plan completo está en [`docs/POST_MVP.md`](docs/POST_MVP.md). Incluye las
+opciones de despliegue, los cambios de configuración requeridos, la política de
+respaldos y los criterios de cierre.
 
 - Definir servidor de publicación, proxy inverso y HTTPS.
 - Configurar un usuario de MySQL con permisos mínimos para producción.

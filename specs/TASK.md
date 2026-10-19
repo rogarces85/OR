@@ -469,7 +469,7 @@
 - [x] **T10.6 · Registrar pendientes no bloqueantes**
   - Qué: dejar constancia de la publicación productiva y los respaldos como trabajo **post-MVP** (Q-3).
   - Verificación: quedan documentados en el README o en `PLAN.md` §14.
-  - Evidencia: sección “Pendientes post-MVP” del `README.md` y `docs/DESPLIEGUE_LOCAL.md` §9.
+  - Evidencia: sección “Post-MVP documentado” del `README.md`, `docs/POST_MVP.md` y `docs/DESPLIEGUE_LOCAL.md` §9.
 
 ---
 

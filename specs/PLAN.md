@@ -420,7 +420,9 @@ Colaboración de módulos para los flujos de `SPECS.md` (sección 5).
 
 ### Pendientes (post-MVP, no bloqueantes)
 
-- **Publicación productiva y respaldos:** definir el servidor, el proxy inverso, HTTPS y la política de copias de seguridad cuando el sistema salga del entorno local (Q-3).
+- **Publicación productiva y respaldos:** plan cerrado documentalmente en
+  `docs/POST_MVP.md`; la ejecución queda pendiente de servidor y dominio
+  (Q-3). No se ha desplegado nada en producción.
 
 ### Riesgos
 - **Integridad de la imputación:** la lógica de pago multimes/multiaño y abonos es la más compleja; un error afecta saldos. *Mitigación:* pruebas unitarias exhaustivas y transacciones atómicas.
@@ -431,4 +433,4 @@ Colaboración de módulos para los flujos de `SPECS.md` (sección 5).
 
 ---
 
-**Nota final:** este plan respeta `specs/AGENT.md` y `specs/SPECS.md`. Las decisiones **P-1…P-8** y **Q-1…Q-4** quedaron resueltas en la sección 14; el único pendiente es **post-MVP** (publicación productiva y respaldos).
+**Nota final:** este plan respeta `specs/AGENT.md` y `specs/SPECS.md`. Las decisiones **P-1…P-8** y **Q-1…Q-4** quedaron resueltas en la sección 14; el único pendiente es la **ejecución** del plan post-MVP (publicación productiva y respaldos), documentada en `docs/POST_MVP.md`.

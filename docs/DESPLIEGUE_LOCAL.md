@@ -171,7 +171,9 @@ Reinicio **total** de los datos de desarrollo:
 
 ## 9. Consideraciones para producción futura (post-MVP)
 
-El MVP está configurado para uso local. Antes de publicarlo:
+El MVP está configurado para uso local. El plan de publicación, HTTPS y
+respaldos está cerrado documentalmente en [`POST_MVP.md`](POST_MVP.md); la
+ejecución queda pendiente de servidor y dominio. Antes de publicarlo:
 
 1. **Servidor y proceso:** definir el host, ejecutar Uvicorn sin `--reload`
    (por ejemplo, con un servicio de Windows, `systemd` o un contenedor) y
