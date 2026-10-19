@@ -94,14 +94,27 @@ def crear_abono(
     return abono
 
 
-def saldo_a_favor(db: Session, miembro_id: int) -> int:
-    """Suma el saldo a favor disponible de un miembro."""
-    abonos = db.scalars(
-        select(Abono).where(
-            Abono.miembro_id == miembro_id, Abono.estado == ESTADO_DISPONIBLE
+def abonos_disponibles(db: Session, miembro_id: int) -> list[Abono]:
+    """Lista los abonos con saldo disponible de un miembro (RN-18)."""
+    return list(
+        db.scalars(
+            select(Abono)
+            .where(
+                Abono.miembro_id == miembro_id,
+                Abono.estado == ESTADO_DISPONIBLE,
+                Abono.saldo_disponible_clp > 0,
+            )
+            .order_by(Abono.id)
         )
     )
-    return sum(abono.saldo_disponible_clp for abono in abonos)
+
+
+def saldo_a_favor(db: Session, miembro_id: int) -> int:
+    """Suma el saldo a favor disponible de un miembro."""
+    return sum(
+        abono.saldo_disponible_clp
+        for abono in abonos_disponibles(db, miembro_id)
+    )
 
 
 def obtener(db: Session, pago_id: int) -> Pago | None:

@@ -5,7 +5,13 @@
   "description": "Sistema Gestión Pagos Osorno Runners — compilación de Tailwind CSS (solo build de estilos).",
   "scripts": {
     "css:build": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css --minify",
-    "css:dev": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css --watch"
+    "css:dev": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/app.css --watch",
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\dev.ps1",
+    "start": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\dev.ps1 -NoWatch",
+    "seed": ".\\venv\\Scripts\\python.exe -m app.seed",
+    "demo": ".\\venv\\Scripts\\python.exe -m app.demo",
+    "test": ".\\venv\\Scripts\\python.exe -m pytest",
+    "lint": ".\\venv\\Scripts\\python.exe -m ruff check app tests"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"

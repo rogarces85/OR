@@ -265,6 +265,20 @@ def aplicar_abono(db: Session, miembro: Miembro, abono: Abono) -> list[Imputacio
     return imputaciones
 
 
+def aplicar_abonos_disponibles(
+    db: Session, miembro: Miembro
+) -> list[ImputacionPago]:
+    """Aplica todos los abonos con saldo a la siguiente cuota impaga (RN-18).
+
+    Se invoca al generar nuevas cuotas para que un saldo a favor se descuente
+    automáticamente de la siguiente cuota del miembro (CA-23).
+    """
+    imputaciones: list[ImputacionPago] = []
+    for abono in repo_pago.abonos_disponibles(db, miembro.id):
+        imputaciones.extend(_aplicar_abono(db, miembro, abono))
+    return imputaciones
+
+
 def _aplicar_abono(
     db: Session, miembro: Miembro, abono: Abono
 ) -> list[ImputacionPago]:

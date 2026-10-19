@@ -73,16 +73,60 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 ## Ejecución (desarrollo)
 
+Con el entorno ya instalado, basta un comando:
+
+```powershell
+npm run dev
+```
+
+Esto levanta el servidor en <http://127.0.0.1:8000>, compila Tailwind en modo
+watch, abre el navegador y avisa si MySQL (XAMPP) no está respondiendo.
+`Ctrl+C` detiene ambos procesos.
+
+Otros atajos:
+
+| Comando | Qué hace |
+| :--- | :--- |
+| `npm run dev` | Servidor + Tailwind en watch + navegador |
+| `npm start` | Solo el servidor (sin recompilar CSS) |
+| `npm run seed` | Carga/actualiza los datos de ejemplo (idempotente) |
+| `npm run demo` | Prepara el caso de negociación de la demo |
+| `npm test` | Ejecuta la suite de pruebas |
+| `npm run lint` | Revisa el estilo con `ruff` |
+| `npm run css:build` | Compila Tailwind una vez (minificado) |
+
+Equivalente manual, si se prefiere hacerlo paso a paso:
+
 ```powershell
 .\venv\Scripts\Activate.ps1
 uvicorn app.main:app --reload
+npm run css:dev        # en otra terminal, solo si se edita la interfaz
 ```
 
-Durante el desarrollo de la interfaz, recompilar Tailwind con:
+## Pruebas
+
+La suite usa **SQLite en memoria** por defecto, así que no necesita XAMPP:
 
 ```powershell
-npm run css:dev
+.\venv\Scripts\python.exe -m pytest
 ```
+
+Para ejecutarla contra MySQL, crear una base de prueba y apuntar
+`TEST_DATABASE_URL` (nunca a la base de desarrollo):
+
+```powershell
+$env:TEST_DATABASE_URL = "mysql+pymysql://root:@localhost:3306/osorno_runners_test"
+.\venv\Scripts\python.exe -m pytest
+```
+
+Revisión de estilo:
+
+```powershell
+.\venv\Scripts\python.exe -m ruff check app tests
+```
+
+La matriz de cobertura de los criterios de aceptación (CA-01 … CA-31) está en
+[`specs/UAT.md`](specs/UAT.md).
 
 ## Demo guiada
 

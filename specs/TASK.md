@@ -396,31 +396,31 @@
 
 ## Fase 8 — Pruebas y revisión
 
-- [ ] **T8.1 · Configurar pytest y base de datos de prueba**
+- [x] **T8.1 · Configurar pytest y base de datos de prueba**
   - Qué: fixtures, base de prueba y utilidades para datos de ejemplo (miembros en distintos estados: al día, naranjo, rojo, exento).
   - Verificación: `pytest` corre y las pruebas base pasan.
-- [ ] **T8.2 · Pruebas unitarias: activación**
+- [x] **T8.2 · Pruebas unitarias: activación**
   - Verificación: pago completo activa; pago parcial no (RN-02).
-- [ ] **T8.3 · Pruebas unitarias: imputación**
+- [x] **T8.3 · Pruebas unitarias: imputación**
   - Verificación: cubre deuda antigua → mes/año → abono, incluyendo el ejemplo de 45.000/30.000 (RN-17, CA-22).
-- [ ] **T8.4 · Pruebas unitarias: abono automático**
+- [x] **T8.4 · Pruebas unitarias: abono automático**
   - Verificación: el abono se aplica a la siguiente cuota (RN-18, CA-23).
-- [ ] **T8.5 · Pruebas unitarias: morosidad y colores**
+- [x] **T8.5 · Pruebas unitarias: morosidad y colores**
   - Verificación: meses cerrados y umbrales verde/naranjo/rojo correctos (P-5, RN-21, CA-24).
-- [ ] **T8.6 · Pruebas unitarias: negociación**
+- [x] **T8.6 · Pruebas unitarias: negociación**
   - Verificación: elegibilidad >6 meses, % válido y efecto "aceptada" (RN-22, P-6, CA-25).
-- [ ] **T8.7 · Pruebas unitarias: corte del día 5**
+- [x] **T8.7 · Pruebas unitarias: corte del día 5**
   - Verificación: pago posterior al día 5 al ciclo siguiente (RN-03, CA-04).
-- [ ] **T8.8 · Prueba de integración: flujo de pago completo**
+- [x] **T8.8 · Prueba de integración: flujo de pago completo**
   - Verificación: registrar pago → imputar → actualizar estado de cuenta (transacción atómica).
-- [ ] **T8.9 · Prueba de integración: alta y activación**
+- [x] **T8.9 · Prueba de integración: alta y activación**
   - Verificación: alta de miembro → pago inicial → activo.
-- [ ] **T8.10 · Prueba de integración: compra → cargo a alumno**
+- [x] **T8.10 · Prueba de integración: compra → cargo a alumno**
   - Verificación: la compra genera cargos separados sin alterar la mora de cuotas.
-- [ ] **T8.11 · Checklist UAT contra los criterios de aceptación**
+- [x] **T8.11 · Checklist UAT contra los criterios de aceptación**
   - Qué: verificar **CA-01 … CA-31** de `SPECS.md` §10.
   - Verificación: cada criterio queda comprobado o registrado como pendiente.
-- [ ] **T8.12 · Revisión de código y linting**
+- [x] **T8.12 · Revisión de código y linting**
   - Qué: ejecutar `ruff` y revisar por pares la lógica crítica (pagos, mora, negociación).
   - Verificación: sin hallazgos bloqueantes; los observados quedan registrados.
 

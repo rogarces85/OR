@@ -86,6 +86,9 @@ def generar_cuotas_del_periodo(
     El monto corresponde a la categoría del miembro (Activa o Estándar; RN-01) y la
     operación es idempotente: no duplica una cuota ya existente de ese periodo.
     """
+    # Import diferido: ``pagos`` importa este módulo (evita el ciclo al cargar).
+    from app.services import pagos as servicio_pagos
+
     creadas: list[CuotaMensual] = []
     for miembro in miembros_facturables(db):
         nivel = repo_membresia.nivel_de_categoria(db, miembro.categoria)
@@ -106,6 +109,9 @@ def generar_cuotas_del_periodo(
                 monto_clp=monto_cuota(nivel),
             )
         )
+        db.flush()
+        # El saldo a favor se descuenta automáticamente de la nueva cuota (CA-23).
+        servicio_pagos.aplicar_abonos_disponibles(db, miembro)
     db.commit()
     return creadas
 
