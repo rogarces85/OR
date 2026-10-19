@@ -224,6 +224,22 @@ OR/
 **MVP completo (fases 1 a 10).** Hoja de ruta y detalle en `specs/TASK.md`;
 cobertura funcional en `specs/COBERTURA.md`.
 
+### Estado de las fases
+
+| Fase | Estado |
+| :--- | :--- |
+| 1 · Preparación y configuración | ✅ Completada |
+| 2 · Estructura base | ✅ Completada |
+| 3 · Modelos de datos y persistencia | ✅ Completada |
+| 4 · Interfaz y navegación | ✅ Completada |
+| 5 · Funcionalidades y reglas de negocio | ✅ Completada |
+| 6 · Validaciones y manejo de errores | ✅ Completada |
+| 7 · Integraciones | ✅ Completada |
+| 8 · Pruebas y revisión | ✅ Completada |
+| 9 · Optimización básica | ✅ Completada |
+| 10 · Documentación y preparación final | ✅ Completada |
+| Post-MVP · Publicación productiva y respaldos | ⏳ Pendiente (Q-3) |
+
 ### Pendientes post-MVP (no bloqueantes, Q-3)
 
 - Definir servidor de publicación, proxy inverso y HTTPS.
