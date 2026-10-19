@@ -22,6 +22,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401  (registra todos los modelos en Base.metadata)
+from app.core import cache
 from app.core.seguridad import hash_password
 from app.database import Base
 from app.models.finanzas import CATEGORIAS_BASE
@@ -73,6 +74,7 @@ def _crear_engine():
 @pytest.fixture()
 def db():
     """Sesión de base de datos aislada: esquema limpio por cada prueba."""
+    cache.limpiar()
     engine = _crear_engine()
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
@@ -85,6 +87,7 @@ def db():
         sesion.close()
         Base.metadata.drop_all(engine)
         engine.dispose()
+        cache.limpiar()
 
 
 @pytest.fixture()

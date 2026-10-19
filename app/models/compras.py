@@ -23,7 +23,9 @@ class CompraClub(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     descripcion: Mapped[str] = mapped_column(String(200), nullable=False)
     proveedor: Mapped[str | None] = mapped_column(String(200))
-    fecha: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    fecha: Mapped[date] = mapped_column(
+        Date, nullable=False, default=date.today, index=True
+    )
     monto_total_clp: Mapped[int] = mapped_column(Integer, nullable=False)
     estado: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ESTADO_COMPRA_REGISTRADA
@@ -68,7 +70,9 @@ class CargoAlumno(Base):
     )
     compra_item_id: Mapped[int | None] = mapped_column(ForeignKey("compras_items.id"))
     monto_clp: Mapped[int] = mapped_column(Integer, nullable=False)
-    fecha: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    fecha: Mapped[date] = mapped_column(
+        Date, nullable=False, default=date.today, index=True
+    )
     estado: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ESTADO_CARGO_PENDIENTE
     )

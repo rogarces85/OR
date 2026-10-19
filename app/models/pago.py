@@ -28,7 +28,7 @@ class Pago(Base):
     )
     monto_clp: Mapped[int] = mapped_column(Integer, nullable=False)
     fecha_pago: Mapped[date] = mapped_column(
-        Date, nullable=False, default=date.today
+        Date, nullable=False, default=date.today, index=True
     )
     medio: Mapped[str] = mapped_column(
         String(20), nullable=False, default=MEDIO_TRANSFERENCIA

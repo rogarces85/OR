@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.membresia import CuotaMensual, NivelCuota
 from app.models.miembro import Miembro
@@ -22,7 +22,11 @@ def listar(
     db: Session, *, desde: date | None = None, hasta: date | None = None
 ) -> list[Pago]:
     """Lista pagos, opcionalmente acotados a un rango de fechas (F-15)."""
-    consulta = select(Pago).order_by(Pago.fecha_pago.desc(), Pago.id.desc())
+    consulta = (
+        select(Pago)
+        .options(selectinload(Pago.miembro))
+        .order_by(Pago.fecha_pago.desc(), Pago.id.desc())
+    )
     if desde is not None:
         consulta = consulta.where(Pago.fecha_pago >= desde)
     if hasta is not None:
@@ -145,7 +149,11 @@ def listar_ingresos(
 
     Cubre F-15 (ingresos filtrados por tipo de cuota y por estado del usuario).
     """
-    consulta = select(Pago).join(Miembro, Pago.miembro_id == Miembro.id)
+    consulta = (
+        select(Pago)
+        .options(selectinload(Pago.miembro))
+        .join(Miembro, Pago.miembro_id == Miembro.id)
+    )
     if desde is not None:
         consulta = consulta.where(Pago.fecha_pago >= desde)
     if hasta is not None:

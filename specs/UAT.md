@@ -5,7 +5,7 @@
 > **Entorno:** Windows + Python del `venv`; suite sobre SQLite en memoria
 > (opcionalmente MySQL con `TEST_DATABASE_URL`).
 > **Comando:** `.\venv\Scripts\python.exe -m pytest`
-> **Resultado:** **121 pruebas aprobadas** y `ruff check app tests` sin hallazgos.
+> **Resultado:** **131 pruebas aprobadas** (incluye las pruebas de optimización de la Fase 9) y `ruff check app tests` sin hallazgos.
 
 ## Matriz de cobertura
 

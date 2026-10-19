@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import date
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
+from app.core import cache
 from app.models.membresia import (
     ESTADO_ACEPTADA,
     ESTADO_EXENTA,
@@ -27,17 +28,34 @@ from app.models.membresia import (
 ESTADOS_AJUSTABLES: tuple[str, ...] = (ESTADO_PENDIENTE, "parcial")
 
 
-def listar_niveles(db: Session, *, solo_activos: bool = True) -> list[NivelCuota]:
-    """Lista el catálogo de cuotas (Matrícula, Estándar y Activa)."""
+def _consultar_niveles(db: Session, solo_activos: bool) -> list[NivelCuota]:
     consulta = select(NivelCuota).order_by(NivelCuota.id)
     if solo_activos:
         consulta = consulta.where(NivelCuota.activo.is_(True))
     return list(db.scalars(consulta))
 
 
+def listar_niveles(db: Session, *, solo_activos: bool = True) -> list[NivelCuota]:
+    """Lista el catálogo de cuotas (Matrícula, Estándar y Activa).
+
+    Se cachea porque el catálogo cambia solo con la semilla (T9.4).
+    """
+    return list(
+        cache.obtener(
+            db,
+            f"niveles:{solo_activos}",
+            lambda: _consultar_niveles(db, solo_activos),
+        )
+    )
+
+
 def obtener_nivel_por_codigo(db: Session, codigo: str) -> NivelCuota | None:
     """Devuelve un nivel del catálogo por su código (``matricula``, etc.)."""
-    return db.scalar(select(NivelCuota).where(NivelCuota.codigo == codigo))
+    return cache.obtener(
+        db,
+        f"nivel:{codigo}",
+        lambda: db.scalar(select(NivelCuota).where(NivelCuota.codigo == codigo)),
+    )
 
 
 def nivel_de_categoria(db: Session, categoria: str) -> NivelCuota | None:
@@ -56,6 +74,7 @@ def cuotas_de_miembro(db: Session, miembro_id: int) -> list[CuotaMensual]:
     return list(
         db.scalars(
             select(CuotaMensual)
+            .options(selectinload(CuotaMensual.nivel))
             .where(CuotaMensual.miembro_id == miembro_id)
             .order_by(CuotaMensual.anio, CuotaMensual.mes, CuotaMensual.nivel_cuota_id)
         )
@@ -90,6 +109,7 @@ def cuotas_por_miembros(
         return agrupadas
     consulta = (
         select(CuotaMensual)
+        .options(selectinload(CuotaMensual.nivel))
         .where(CuotaMensual.miembro_id.in_(miembros_ids))
         .order_by(CuotaMensual.miembro_id, CuotaMensual.anio, CuotaMensual.mes)
     )
@@ -107,6 +127,10 @@ def listar_por_periodo(db: Session, anio: int, mes: int) -> list[CuotaMensual]:
     return list(
         db.scalars(
             select(CuotaMensual)
+            .options(
+                selectinload(CuotaMensual.nivel),
+                selectinload(CuotaMensual.miembro),
+            )
             .where(CuotaMensual.anio == anio, CuotaMensual.mes == mes)
             .order_by(CuotaMensual.miembro_id)
         )
@@ -138,6 +162,7 @@ def cuotas_ajustables_desde(
     return list(
         db.scalars(
             select(CuotaMensual)
+            .options(selectinload(CuotaMensual.nivel))
             .join(NivelCuota, CuotaMensual.nivel_cuota_id == NivelCuota.id)
             .where(
                 CuotaMensual.miembro_id == miembro_id,
@@ -221,6 +246,7 @@ def cuotas_impagas(db: Session, miembro_id: int) -> list[CuotaMensual]:
     return list(
         db.scalars(
             select(CuotaMensual)
+            .options(selectinload(CuotaMensual.nivel))
             .where(
                 CuotaMensual.miembro_id == miembro_id,
                 CuotaMensual.estado.in_(ESTADOS_IMPAGOS),
@@ -246,17 +272,31 @@ def siguiente_cuota_impaga(db: Session, miembro_id: int) -> CuotaMensual | None:
     )
 
 
-def deuda_negociada_clp(db: Session, miembro_id: int) -> int:
-    """Deuda excluida del color por negociaciones aceptadas o pagadas (P-6)."""
-    total = db.scalar(
-        select(func.coalesce(func.sum(NegociacionDeuda.deuda_total_clp), 0)).where(
-            NegociacionDeuda.miembro_id == miembro_id,
+def deudas_negociadas_por_miembros(
+    db: Session, miembros_ids: list[int]
+) -> dict[int, int]:
+    """Suma la deuda excluida por miembro en una sola consulta (P-6, T9.2)."""
+    if not miembros_ids:
+        return {}
+    filas = db.execute(
+        select(
+            NegociacionDeuda.miembro_id,
+            func.coalesce(func.sum(NegociacionDeuda.deuda_total_clp), 0),
+        )
+        .where(
+            NegociacionDeuda.miembro_id.in_(miembros_ids),
             NegociacionDeuda.estado.in_(
                 (ESTADO_ACEPTADA, ESTADO_NEGOCIACION_PAGADA)
             ),
         )
-    )
-    return int(total or 0)
+        .group_by(NegociacionDeuda.miembro_id)
+    ).all()
+    return {miembro_id: int(total) for miembro_id, total in filas}
+
+
+def deuda_negociada_clp(db: Session, miembro_id: int) -> int:
+    """Deuda excluida del color por negociaciones aceptadas o pagadas (P-6)."""
+    return deudas_negociadas_por_miembros(db, [miembro_id]).get(miembro_id, 0)
 
 
 # --------------------------------------------------------------------------- #
@@ -273,8 +313,10 @@ def listar_negociaciones(
     db: Session, *, miembro_id: int | None = None
 ) -> list[NegociacionDeuda]:
     """Lista las negociaciones registradas, de la más reciente a la más antigua."""
-    consulta = select(NegociacionDeuda).order_by(
-        NegociacionDeuda.fecha.desc(), NegociacionDeuda.id.desc()
+    consulta = (
+        select(NegociacionDeuda)
+        .options(selectinload(NegociacionDeuda.miembro))
+        .order_by(NegociacionDeuda.fecha.desc(), NegociacionDeuda.id.desc())
     )
     if miembro_id is not None:
         consulta = consulta.where(NegociacionDeuda.miembro_id == miembro_id)

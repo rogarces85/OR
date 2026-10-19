@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import date
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
+from app.core import cache
 from app.models.finanzas import (
     PERIODICIDAD_MENSUAL,
     TIPO_GENERAL,
@@ -16,14 +17,36 @@ from app.models.finanzas import (
 )
 
 
-def listar_categorias(db: Session, *, solo_activas: bool = True) -> list[CategoriaEgreso]:
-    """Lista las categorías de egreso (base y personalizadas, RN-10)."""
+def _consultar_categorias(
+    db: Session, solo_activas: bool
+) -> list[CategoriaEgreso]:
     consulta = select(CategoriaEgreso).order_by(
         CategoriaEgreso.es_base.desc(), CategoriaEgreso.nombre
     )
     if solo_activas:
         consulta = consulta.where(CategoriaEgreso.activo.is_(True))
     return list(db.scalars(consulta))
+
+
+def listar_categorias(db: Session, *, solo_activas: bool = True) -> list[CategoriaEgreso]:
+    """Lista las categorías de egreso (base y personalizadas, RN-10).
+
+    Se cachea el catálogo porque se repite en formularios y listados (T9.4).
+    """
+    return list(
+        cache.obtener(
+            db,
+            f"categorias_egreso:{solo_activas}",
+            lambda: _consultar_categorias(db, solo_activas),
+        )
+    )
+
+
+def invalidar_categorias(db: Session) -> None:
+    """Invalida el catálogo cacheado de categorías de egreso."""
+    cache.invalidar(
+        db, "categorias_egreso:True", "categorias_egreso:False"
+    )
 
 
 def obtener_categoria(db: Session, categoria_id: int) -> CategoriaEgreso | None:
@@ -44,6 +67,7 @@ def crear_categoria(
     """Crea una categoría de egreso (personalizada o base)."""
     categoria = CategoriaEgreso(nombre=nombre.strip(), es_base=es_base, activo=activo)
     db.add(categoria)
+    invalidar_categorias(db)
     return categoria
 
 
@@ -55,7 +79,11 @@ def listar_egresos(
     categoria_id: int | None = None,
 ) -> list[Egreso]:
     """Lista egresos aplicando filtros de periodo y categoría (F-16)."""
-    consulta = select(Egreso).order_by(Egreso.fecha.desc(), Egreso.id.desc())
+    consulta = (
+        select(Egreso)
+        .options(selectinload(Egreso.categoria))
+        .order_by(Egreso.fecha.desc(), Egreso.id.desc())
+    )
     if desde is not None:
         consulta = consulta.where(Egreso.fecha >= desde)
     if hasta is not None:
@@ -123,6 +151,7 @@ def guardar_categoria(db: Session, categoria: CategoriaEgreso) -> CategoriaEgres
     db.add(categoria)
     db.commit()
     db.refresh(categoria)
+    invalidar_categorias(db)
     return categoria
 
 

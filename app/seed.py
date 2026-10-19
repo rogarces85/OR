@@ -16,6 +16,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core import cache
 from app.core.seguridad import hash_password
 from app.database import SessionLocal, crear_esquema
 from app.models.compras import CargoAlumno
@@ -104,6 +105,8 @@ def _asegurar_niveles(db: Session) -> dict[str, NivelCuota]:
         if repo_membresia.obtener_nivel_por_codigo(db, codigo) is None:
             db.add(NivelCuota(codigo=codigo, nombre=nombre, monto_clp=monto, tipo=tipo))
     db.flush()
+    # Los niveles recién creados invalidan las lecturas cacheadas (T9.4).
+    cache.limpiar()
     niveles: dict[str, NivelCuota] = {}
     for codigo, _, _, _ in NIVELES_SEMILLA:
         nivel = repo_membresia.obtener_nivel_por_codigo(db, codigo)
@@ -352,6 +355,7 @@ def _sembrar_cuotas_de_ejemplo(db: Session, niveles: dict[str, NivelCuota]) -> N
 
 def sembrar(db: Session) -> None:
     """Carga la semilla completa de forma idempotente."""
+    cache.limpiar()
     niveles = _asegurar_niveles(db)
     _asegurar_categorias(db)
     _asegurar_cuenta(db)
@@ -359,6 +363,7 @@ def sembrar(db: Session) -> None:
     _asegurar_usuarios(db)
     _sembrar_cuotas_de_ejemplo(db, niveles)
     db.commit()
+    cache.limpiar()
 
 
 def main() -> None:

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from sqlalchemy import Date, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Date, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -81,14 +81,16 @@ class CuotaMensual(Base):
             "nivel_cuota_id",
             name="uq_cuota_miembro_periodo_nivel",
         ),
+        # T9.1: consultas por periodo (generación, listados y reportes).
+        Index("ix_cuotas_mensuales_periodo", "anio", "mes"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     miembro_id: Mapped[int] = mapped_column(
         ForeignKey("miembros.id"), nullable=False, index=True
     )
-    anio: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    mes: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    anio: Mapped[int] = mapped_column(Integer, nullable=False)
+    mes: Mapped[int] = mapped_column(Integer, nullable=False)
     nivel_cuota_id: Mapped[int] = mapped_column(
         ForeignKey("niveles_cuota.id"), nullable=False
     )
@@ -129,7 +131,9 @@ class NegociacionDeuda(Base):
     deuda_total_clp: Mapped[int] = mapped_column(Integer, nullable=False)
     descuento_pct: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     monto_negociado_clp: Mapped[int] = mapped_column(Integer, nullable=False)
-    fecha: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    fecha: Mapped[date] = mapped_column(
+        Date, nullable=False, default=date.today, index=True
+    )
     usuario_id: Mapped[int | None] = mapped_column(ForeignKey("usuarios.id"))
     estado: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ESTADO_PROPUESTA

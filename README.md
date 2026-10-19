@@ -128,6 +128,15 @@ Revisión de estilo:
 La matriz de cobertura de los criterios de aceptación (CA-01 … CA-31) está en
 [`specs/UAT.md`](specs/UAT.md).
 
+## Optimización y producción
+
+- `npm run css:build` genera el CSS de Tailwind **minificado** en
+  `app/static/css/app.css` (la aplicación lo sirve desde `base.html`).
+- `npm run seed` crea el esquema y, si la base ya existía, agrega los índices
+  declarados que falten (T9.1) sin borrar datos.
+- Los catálogos de niveles de cuota, cuenta bancaria y categorías de egreso se
+  cachean 60 segundos en proceso y se invalidan al modificarlos (T9.4).
+
 ## Demo guiada
 
 Para una demostración completa del MVP (miembros, pagos, morosidad,

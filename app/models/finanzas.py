@@ -52,7 +52,9 @@ class Egreso(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     monto_clp: Mapped[int] = mapped_column(Integer, nullable=False)
-    fecha: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
+    fecha: Mapped[date] = mapped_column(
+        Date, nullable=False, default=date.today, index=True
+    )
     concepto: Mapped[str] = mapped_column(String(200), nullable=False)
     categoria_egreso_id: Mapped[int] = mapped_column(
         ForeignKey("categorias_egreso.id"), nullable=False

@@ -428,16 +428,16 @@
 
 ## Fase 9 — Optimización básica
 
-- [ ] **T9.1 · Índices de base de datos**
+- [x] **T9.1 · Índices de base de datos**
   - Qué: índices en `miembro_id`, `(anio, mes)`, `email`.
   - Verificación: los listados y el cálculo de mora responden con tiempos razonables.
-- [ ] **T9.2 · Revisar consultas N+1 en listados**
+- [x] **T9.2 · Revisar consultas N+1 en listados**
   - Qué: cargar relaciones necesarias (miembros, cuotas, pagos) sin consultas redundantes.
   - Verificación: el número de consultas por pantalla es acotado.
-- [ ] **T9.3 · Compilar Tailwind en modo producción**
+- [x] **T9.3 · Compilar Tailwind en modo producción**
   - Qué: generar el CSS minificado final.
   - Verificación: la interfaz usa el CSS compilado y sin errores.
-- [ ] **T9.4 · Caché de catálogos estáticos**
+- [x] **T9.4 · Caché de catálogos estáticos**
   - Qué: cachear niveles de cuota, cuenta bancaria y categorías base.
   - Verificación: los catálogos no se consultan repetidamente en cada request.
 

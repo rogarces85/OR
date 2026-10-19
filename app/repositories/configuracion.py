@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core import cache
 from app.models.configuracion import (
     ESTADO_AVISO_PENDIENTE,
     AvisoMorosidad,
@@ -14,8 +15,16 @@ from app.models.configuracion import (
 
 
 def obtener_cuenta(db: Session) -> CuentaBancaria | None:
-    """Devuelve la cuenta bancaria configurada para transferencias (D-22)."""
-    return db.scalar(select(CuentaBancaria).order_by(CuentaBancaria.id))
+    """Devuelve la cuenta bancaria configurada para transferencias (D-22).
+
+    Se cachea porque se muestra en la landing, los avisos y las instrucciones
+    de pago (T9.4).
+    """
+    return cache.obtener(
+        db,
+        "cuenta_bancaria",
+        lambda: db.scalar(select(CuentaBancaria).order_by(CuentaBancaria.id)),
+    )
 
 
 def obtener_plantilla(db: Session, nombre: str | None = None) -> PlantillaCorreo | None:
@@ -46,6 +55,7 @@ def crear_cuenta(
         correo=correo.strip(),
     )
     db.add(cuenta)
+    cache.invalidar(db, "cuenta_bancaria")
     return cuenta
 
 

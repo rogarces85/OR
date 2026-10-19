@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.compras import (
     ESTADO_CARGO_PENDIENTE,
@@ -18,7 +18,11 @@ from app.models.compras import (
 def listar_compras(db: Session) -> list[CompraClub]:
     """Lista las compras del club, de la más reciente a la más antigua."""
     return list(
-        db.scalars(select(CompraClub).order_by(CompraClub.fecha.desc(), CompraClub.id.desc()))
+        db.scalars(
+            select(CompraClub)
+            .options(selectinload(CompraClub.items))
+            .order_by(CompraClub.fecha.desc(), CompraClub.id.desc())
+        )
     )
 
 
@@ -121,8 +125,10 @@ def listar_cargos(
     db: Session, *, miembro_id: int | None = None, estado: str | None = None
 ) -> list[CargoAlumno]:
     """Lista los cargos a alumnos, del más reciente al más antiguo."""
-    consulta = select(CargoAlumno).order_by(
-        CargoAlumno.fecha.desc(), CargoAlumno.id.desc()
+    consulta = (
+        select(CargoAlumno)
+        .options(selectinload(CargoAlumno.miembro))
+        .order_by(CargoAlumno.fecha.desc(), CargoAlumno.id.desc())
     )
     if miembro_id is not None:
         consulta = consulta.where(CargoAlumno.miembro_id == miembro_id)

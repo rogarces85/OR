@@ -129,16 +129,18 @@ def listar_miembros_con_morosidad(
     miembros = repo_miembro.listar(
         db, texto=texto, categoria=categoria, situacion=situacion
     )
+    ids = [miembro.id for miembro in miembros]
     cuotas_por_miembro = repo_membresia.cuotas_por_miembros(
-        db, [miembro.id for miembro in miembros], solo_mensuales=True
+        db, ids, solo_mensuales=True
     )
+    deudas_excluidas = repo_membresia.deudas_negociadas_por_miembros(db, ids)
     filas: list[tuple[Miembro, MorosidadInfo]] = []
     for miembro in miembros:
         info = calcular_morosidad(
             miembro,
             cuotas_por_miembro.get(miembro.id, []),
             referencia,
-            deuda_excluida_clp=repo_membresia.deuda_negociada_clp(db, miembro.id),
+            deuda_excluida_clp=deudas_excluidas.get(miembro.id, 0),
         )
         if color and info.color != color:
             continue
