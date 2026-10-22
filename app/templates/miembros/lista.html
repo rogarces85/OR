@@ -80,6 +80,7 @@
         <th scope="col" class="px-4 py-3">Miembro</th>
         <th scope="col" class="px-4 py-3">Categoría</th>
         <th scope="col" class="px-4 py-3">Activación</th>
+        <th scope="col" class="px-4 py-3">Matrícula</th>
         <th scope="col" class="px-4 py-3 text-right">Deuda</th>
         <th scope="col" class="px-4 py-3">Morosidad</th>
       </tr>
@@ -88,10 +89,13 @@
       {% for miembro, info in filas %}
         <tr class="hover:bg-gray-50">
           <td class="px-4 py-3">
-            <a href="/miembros/{{ miembro.id }}" class="font-medium hover:text-marca-rojo">
+            <a href="/miembros/{{ miembro.id }}/editar" class="font-medium hover:text-marca-rojo">
               {{ miembro.nombre_completo }}
             </a>
             <p class="text-xs text-gray-500">{{ miembro.email }}</p>
+            <a href="/miembros/{{ miembro.id }}" class="text-xs text-gray-500 hover:text-marca-rojo">
+              Ver ficha
+            </a>
           </td>
           <td class="px-4 py-3">
             {{ "Activo" if miembro.categoria == "activo" else "Membresía" }}
@@ -101,6 +105,13 @@
               <span class="text-green-700">Activo</span>
             {% else %}
               <span class="text-amber-700">Pendiente</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if miembro.matriculado %}
+              <span class="text-green-700">Sí</span>
+            {% else %}
+              <span class="text-amber-700">No</span>
             {% endif %}
           </td>
           <td class="px-4 py-3 text-right tabular-nums">
@@ -120,7 +131,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="5" class="px-4 py-10 text-center text-gray-500">
+          <td colspan="6" class="px-4 py-10 text-center text-gray-500">
             No hay miembros que coincidan con el filtro aplicado.
           </td>
         </tr>

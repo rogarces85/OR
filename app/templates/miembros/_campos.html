@@ -36,3 +36,21 @@
     {% endif %}
   </div>
 {% endmacro %}
+
+
+{% macro campo_check(nombre, etiqueta, valor=False, ayuda="", error="") %}
+  <div class="sm:col-span-2">
+    <label for="{{ nombre }}" class="flex items-start gap-2 text-sm">
+      <input id="{{ nombre }}" name="{{ nombre }}" type="checkbox" value="true"
+             {% if valor %}checked{% endif %}
+             class="mt-0.5 h-4 w-4 rounded border-gray-300 text-marca-rojo focus:ring-marca-rojo">
+      <span>
+        <span class="font-medium text-gray-700">{{ etiqueta }}</span>
+        {% if ayuda %}<span class="block text-xs text-gray-500">{{ ayuda }}</span>{% endif %}
+      </span>
+    </label>
+    {% if error %}
+      <p class="mt-1 text-xs text-red-700">{{ error }}</p>
+    {% endif %}
+  </div>
+{% endmacro %}

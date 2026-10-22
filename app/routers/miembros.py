@@ -7,7 +7,8 @@ T5.10 (exención de cobros y avisos).
 
 from __future__ import annotations
 
-from typing import Annotated
+from datetime import date
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -63,9 +64,11 @@ def _datos_ficha(
     telefono: str,
     rut: str,
     fecha_nacimiento: str,
+    fecha_incorporacion: str,
     direccion: str,
     contacto_emergencia: str,
-) -> dict[str, str]:
+    matriculado: bool = False,
+) -> dict[str, Any]:
     """Arma el diccionario de la ficha ampliada recibido del formulario (D-6)."""
     return {
         "nombre_completo": nombre_completo,
@@ -73,12 +76,32 @@ def _datos_ficha(
         "telefono": telefono,
         "rut": rut,
         "fecha_nacimiento": fecha_nacimiento,
+        "fecha_incorporacion": fecha_incorporacion,
         "direccion": direccion,
         "contacto_emergencia": contacto_emergencia,
+        "matriculado": matriculado,
     }
 
 
-def _validar_ficha(datos: dict[str, str]) -> tuple[MiembroEntrada | None, dict[str, str]]:
+def _datos_desde_miembro(miembro: Miembro) -> dict[str, str]:
+    """Convierte la ficha guardada al formato que espera el formulario."""
+    return {
+        "nombre_completo": miembro.nombre_completo,
+        "email": miembro.email,
+        "telefono": miembro.telefono or "",
+        "rut": miembro.rut or "",
+        "fecha_nacimiento": (
+            miembro.fecha_nacimiento.isoformat() if miembro.fecha_nacimiento else ""
+        ),
+        "fecha_incorporacion": miembro.fecha_incorporacion.isoformat(),
+        "direccion": miembro.direccion or "",
+        "contacto_emergencia": miembro.contacto_emergencia or "",
+    }
+
+
+def _validar_ficha(
+    datos: dict[str, Any],
+) -> tuple[MiembroEntrada | None, dict[str, str]]:
     """Valida la ficha y devuelve la entrada junto con los errores por campo."""
     try:
         return MiembroEntrada(**datos), {}
@@ -165,10 +188,13 @@ async def mostrar_alta(
         context={
             "accion": "/miembros/nuevo",
             "titulo": "Nuevo miembro",
-            "datos": {},
+            "datos": {"fecha_incorporacion": date.today().isoformat()},
             "errores": {},
             "categorias": CATEGORIAS,
             "categoria": CATEGORIA_ACTIVO,
+            "edicion": False,
+            "matriculado": False,
+            "cancelar_url": "/miembros",
         },
     )
 
@@ -184,9 +210,11 @@ async def crear_miembro(
     telefono: str = Form(""),
     rut: str = Form(""),
     fecha_nacimiento: str = Form(""),
+    fecha_incorporacion: str = Form(""),
     direccion: str = Form(""),
     contacto_emergencia: str = Form(""),
     categoria: str = Form(CATEGORIA_ACTIVO),
+    matriculado: bool = Form(False),
 ) -> HTMLResponse | RedirectResponse:
     """Registra un miembro nuevo y su obligación inicial (F-01, Flujo 1, CA-16)."""
     datos = _datos_ficha(
@@ -195,8 +223,10 @@ async def crear_miembro(
         telefono=telefono,
         rut=rut,
         fecha_nacimiento=fecha_nacimiento,
+        fecha_incorporacion=fecha_incorporacion or date.today().isoformat(),
         direccion=direccion,
         contacto_emergencia=contacto_emergencia,
+        matriculado=matriculado,
     )
     if not _csrf_ok(request, csrf_token):
         return _redirigir("/miembros/nuevo")
@@ -221,6 +251,9 @@ async def crear_miembro(
                 "errores": errores,
                 "categorias": CATEGORIAS,
                 "categoria": categoria,
+                "edicion": False,
+                "matriculado": matriculado,
+                "cancelar_url": "/miembros",
                 "mensajes": [
                     {
                         "tipo": "error",
@@ -238,17 +271,24 @@ async def crear_miembro(
         telefono=entrada.telefono,
         rut=entrada.rut,
         fecha_nacimiento=entrada.fecha_nacimiento,
+        fecha_incorporacion=entrada.fecha_incorporacion,
+        matriculado=entrada.matriculado,
         direccion=entrada.direccion,
         contacto_emergencia=entrada.contacto_emergencia,
         categoria=categoria,
         usuario_id=usuario.id,
     )
-    flash(
-        request,
-        "ok",
-        f"Miembro {miembro.nombre_completo} registrado. Queda pendiente hasta "
-        "completar el pago inicial (Matrícula + la cuota de su categoría).",
-    )
+    if entrada.matriculado:
+        mensaje = (
+            f"Miembro {miembro.nombre_completo} registrado y marcado como matriculado. "
+            "No se generará cobro de matrícula."
+        )
+    else:
+        mensaje = (
+            f"Miembro {miembro.nombre_completo} registrado. Queda pendiente hasta "
+            "completar el pago inicial (Matrícula + la cuota de su categoría)."
+        )
+    flash(request, "ok", mensaje)
     return _redirigir(f"/miembros/{miembro.id}")
 
 
@@ -285,6 +325,33 @@ async def ver_miembro(
     )
 
 
+@router.get("/miembros/{miembro_id}/editar", response_class=HTMLResponse)
+async def mostrar_edicion(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+) -> HTMLResponse:
+    """Muestra el formulario de edición de la ficha del miembro (T5.3)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    return templates.TemplateResponse(
+        request=request,
+        name="miembros/formulario.html",
+        context={
+            "accion": f"/miembros/{miembro.id}/editar",
+            "titulo": "Editar miembro",
+            "datos": _datos_desde_miembro(miembro),
+            "errores": {},
+            "categorias": CATEGORIAS,
+            "categoria": miembro.categoria,
+            "edicion": True,
+            "matriculado": miembro.matriculado,
+            "cancelar_url": f"/miembros/{miembro.id}",
+            "miembro": miembro,
+        },
+    )
+
+
 @router.post("/miembros/{miembro_id}/editar", response_model=None)
 async def editar_miembro(
     request: Request,
@@ -297,9 +364,11 @@ async def editar_miembro(
     telefono: str = Form(""),
     rut: str = Form(""),
     fecha_nacimiento: str = Form(""),
+    fecha_incorporacion: str = Form(""),
     direccion: str = Form(""),
     contacto_emergencia: str = Form(""),
-) -> RedirectResponse:
+    matriculado: bool = Form(False),
+) -> HTMLResponse | RedirectResponse:
     """Modifica la ficha del miembro sin alterar su historial (T5.3)."""
     miembro = _obtener_miembro(db, miembro_id)
     datos = _datos_ficha(
@@ -308,8 +377,12 @@ async def editar_miembro(
         telefono=telefono,
         rut=rut,
         fecha_nacimiento=fecha_nacimiento,
+        fecha_incorporacion=(
+            fecha_incorporacion or miembro.fecha_incorporacion.isoformat()
+        ),
         direccion=direccion,
         contacto_emergencia=contacto_emergencia,
+        matriculado=matriculado,
     )
     if not _csrf_ok(request, csrf_token):
         return _redirigir(f"/miembros/{miembro.id}")
@@ -322,12 +395,29 @@ async def editar_miembro(
                 "Ya existe otro miembro registrado con este correo electrónico."
             )
     if entrada is None or errores:
-        flash(
-            request,
-            "error",
-            "No se guardaron los cambios. " + _resumen_errores(errores),
+        return templates.TemplateResponse(
+            request=request,
+            name="miembros/formulario.html",
+            context={
+                "accion": f"/miembros/{miembro.id}/editar",
+                "titulo": "Editar miembro",
+                "datos": datos,
+                "errores": errores,
+                "categorias": CATEGORIAS,
+                "categoria": miembro.categoria,
+                "edicion": True,
+                "matriculado": matriculado,
+                "cancelar_url": f"/miembros/{miembro.id}",
+                "miembro": miembro,
+                "mensajes": [
+                    {
+                        "tipo": "error",
+                        "texto": "No se guardaron los cambios. "
+                        + _resumen_errores(errores),
+                    }
+                ],
+            },
         )
-        return _redirigir(f"/miembros/{miembro.id}")
 
     servicio_membresias.editar_miembro(
         db,
@@ -337,6 +427,8 @@ async def editar_miembro(
         telefono=entrada.telefono,
         rut=entrada.rut,
         fecha_nacimiento=entrada.fecha_nacimiento,
+        fecha_incorporacion=entrada.fecha_incorporacion,
+        matriculado=entrada.matriculado,
         direccion=entrada.direccion,
         contacto_emergencia=entrada.contacto_emergencia,
     )

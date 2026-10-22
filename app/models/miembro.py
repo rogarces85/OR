@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -43,6 +43,9 @@ class Miembro(Base):
     contacto_emergencia: Mapped[str | None] = mapped_column(String(200))
     fecha_incorporacion: Mapped[date] = mapped_column(
         Date, nullable=False, default=date.today
+    )
+    matriculado: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
     )
     categoria: Mapped[str] = mapped_column(
         String(20), nullable=False, default=CATEGORIA_ACTIVO

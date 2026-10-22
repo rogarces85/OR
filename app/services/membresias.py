@@ -45,10 +45,11 @@ def monto_cuota(nivel: NivelCuota) -> int:
 def crear_miembro(db: Session, **datos: Any) -> Miembro:
     """Crea la ficha del miembro y genera su obligación inicial (F-01, Flujo 1).
 
-    La **fecha de incorporación** se captura automáticamente como la fecha de alta
-    en el sistema (D-3, RN-14). El miembro queda **pendiente** hasta completar el
-    pago inicial (RN-02) y el sistema registra la obligación: Matrícula + la cuota
-    de la categoría elegida.
+    La **fecha de ingreso** se propone como la fecha de alta, pero puede venir
+    editada (D-3, RN-14). El miembro queda **pendiente** hasta completar el pago
+    inicial (RN-02) y el sistema registra la obligación: Matrícula (si corresponde)
+    + la cuota de la categoría elegida. No se genera Matrícula para miembros ya
+    marcados como matriculados ni para ingresos anteriores al 01/09/2025 (RN-27).
     """
     datos.setdefault("fecha_incorporacion", date.today())
     miembro = repo_miembro.crear(db, **datos)

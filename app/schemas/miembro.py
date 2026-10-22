@@ -26,6 +26,8 @@ ETIQUETAS_CAMPO: dict[str, str] = {
     "telefono": "Teléfono",
     "rut": "RUT",
     "fecha_nacimiento": "Fecha de nacimiento",
+    "fecha_incorporacion": "Fecha de ingreso",
+    "matriculado": "Matriculado",
     "direccion": "Dirección",
     "contacto_emergencia": "Contacto de emergencia",
 }
@@ -44,6 +46,8 @@ class MiembroEntrada(BaseModel):
     telefono: str = Field(min_length=6, max_length=40)
     rut: str = Field(min_length=3, max_length=20)
     fecha_nacimiento: date
+    fecha_incorporacion: date
+    matriculado: bool = False
     direccion: str = Field(min_length=3, max_length=255)
     contacto_emergencia: str = Field(min_length=3, max_length=200)
 

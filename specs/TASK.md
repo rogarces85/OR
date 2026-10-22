@@ -195,23 +195,23 @@
 ### 5.A · Miembros (F-01, F-04, F-05)
 
 - [x] **T5.1 · Alta de miembro**
-  - Qué: formulario y validación de la ficha ampliada; captura automática de `fecha_incorporacion` como fecha de alta.
-  - Verificación: se crea un miembro completo y la fecha de incorporación queda registrada (CA-16).
-  - Relación: F-01, RN-11, RN-14, D-3, D-6.
+  - Qué: formulario y validación de la ficha ampliada; fecha de ingreso editable (por defecto, la fecha de alta) y estado de matrícula.
+  - Verificación: se crea un miembro completo y la fecha de ingreso queda registrada (CA-16).
+  - Relación: F-01, RN-11, RN-14, RN-27, D-3, D-6, D-27.
 - [x] **T5.2 · Listado y búsqueda de miembros**
   - Qué: listado con búsqueda/filtro (por estado, categoría, morosidad).
   - Verificación: el listado muestra los miembros y los filtros devuelven resultados coherentes.
 - [x] **T5.3 · Edición de datos del miembro**
-  - Qué: modificar datos de la ficha ampliada sin alterar el historial.
+  - Qué: abrir el formulario de edición desde el listado y modificar la ficha ampliada, incluida la fecha de ingreso y el estado de matrícula, sin alterar el historial.
   - Verificación: los cambios se reflejan y se validan.
 - [x] **T5.4 · Cambio de categoría con historial (Activo ↔ Membresía)**
   - Qué: cambiar categoría entre Activo y Membresía, registrando el cambio y ajustando la cuota mensual.
   - Verificación: el historial registra el cambio y la cuota se ajusta (CA-29).
   - Relación: F-05, RN-25, D-26.
 - [x] **T5.5 · Activación de membresía**
-  - Qué: evaluar el pago inicial (Matrícula + cuota de la categoría) y activar al miembro.
+  - Qué: evaluar el pago inicial (Matrícula + cuota de la categoría) y activar al miembro. La Matrícula se omite para matriculados y para ingresos anteriores al 01/09/2025.
   - Verificación: con pago parcial queda pendiente; con pago completo queda activo (CA-01).
-  - Relación: F-07, RN-02, D-11.
+  - Relación: F-07, RN-02, RN-27, D-11, D-27.
 - [x] **T5.6 · Vista del miembro (autoconsulta restringida)**
   - Qué: el miembro ve solo su perfil, estado de cuenta y avisos.
   - Verificación: no puede ver datos de otro miembro (CA-12).

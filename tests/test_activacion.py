@@ -111,3 +111,50 @@ def test_pagar_solo_la_matricula_no_activa(miembro_pendiente, db, niveles):
     assert matricula.estado == ESTADO_PAGADA
     assert cuota_activa.estado == ESTADO_PENDIENTE
     assert miembro.situacion_activacion == ACTIVACION_PENDIENTE
+
+
+def test_miembro_antiguo_matriculado_no_genera_matricula(db, niveles):
+    """Un miembro marcado como matriculado no vuelve a generar la Matrícula."""
+    miembro = servicio_membresias.crear_miembro(
+        db,
+        nombre_completo="Antiguo Matriculado",
+        email="antiguo.matriculado@example.com",
+        categoria="activo",
+        fecha_incorporacion=date(2026, 1, 10),
+        matriculado=True,
+    )
+
+    cuotas = repo_membresia.cuotas_de_miembro(db, miembro.id)
+    assert len(cuotas) == 1
+    assert {cuota.nivel.codigo for cuota in cuotas} == {NIVEL_ACTIVA}
+
+    estado = servicio_activacion.evaluar_activacion(db, miembro)
+    assert [concepto.etiqueta for concepto in estado.conceptos] == [
+        "Membresía Activa"
+    ]
+    assert estado.requerido_clp == 15_000
+
+
+def test_matricula_se_cobra_desde_septiembre_2025(db, niveles):
+    """La matrícula solo se genera desde el 01/09/2025 para miembros nuevos."""
+    anterior = servicio_membresias.crear_miembro(
+        db,
+        nombre_completo="Ingreso Anterior",
+        email="ingreso.anterior@example.com",
+        categoria="activo",
+        fecha_incorporacion=date(2025, 8, 31),
+    )
+    desde = servicio_membresias.crear_miembro(
+        db,
+        nombre_completo="Ingreso Septiembre",
+        email="ingreso.septiembre@example.com",
+        categoria="activo",
+        fecha_incorporacion=date(2025, 9, 1),
+    )
+
+    assert [c.nivel.codigo for c in repo_membresia.cuotas_de_miembro(db, anterior.id)] == [
+        NIVEL_ACTIVA
+    ]
+    assert {
+        c.nivel.codigo for c in repo_membresia.cuotas_de_miembro(db, desde.id)
+    } == {NIVEL_MATRICULA, NIVEL_ACTIVA}

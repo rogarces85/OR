@@ -48,7 +48,7 @@
 | RN | Regla | Implementación / evidencia |
 | :-- | :-- | :-- |
 | RN-01 | Montos fijos 5.000 / 5.000 / 15.000 | `app/seed.py`, `app/models/membresia.py`; `tests/test_membresias.py::test_catalogo_de_cuotas_rn01` |
-| RN-02 | Activación con Matrícula + cuota de la categoría | `app/services/activacion.py`, `app/services/pagos.py`; `tests/test_activacion.py` |
+| RN-02 | Activación con Matrícula + cuota de la categoría (Matrícula omitida para matriculados) | `app/services/activacion.py`, `app/services/pagos.py`; `tests/test_activacion.py` |
 | RN-03 | Corte al día 5 | `app/services/pagos.py::periodo_de_cobro`; `tests/test_corte_dia5.py` |
 | RN-04 | Mora y acceso de consulta | `app/services/morosidad.py`, `app/routers/cuenta.py`; `tests/test_morosidad.py`, `tests/test_web.py` |
 | RN-05 | Exención automática de cobros y avisos | `app/services/membresias.py`; `tests/test_membresias.py` |
@@ -60,7 +60,7 @@
 | RN-11 | Correo como identificador único | `app/models/miembro.py`; `tests/test_web.py::test_alta_rechaza_correo_duplicado` |
 | RN-12 | Recurrencia mensual de cuotas y gastos fijos | `app/services/membresias.py`, `app/services/finanzas.py`; `tests/test_membresias.py`, `tests/test_finanzas.py` |
 | RN-13 | Avisos manuales, sin correo automático | `app/services/correo.py`, `app/routers/morosidad.py`; `tests/test_correo.py` |
-| RN-14 | Fecha de incorporación automática | `app/services/membresias.py::crear_miembro`, `app/repositories/miembro.py`; `tests/test_e2e_mvp.py` |
+| RN-14 | Fecha de ingreso editable (por defecto, fecha de alta) | `app/services/membresias.py::crear_miembro`, `app/repositories/miembro.py`; `tests/test_e2e_mvp.py`, `tests/test_web.py` |
 | RN-15 | Trazabilidad de ingresos y egresos | Campos `fecha`, `monto`, `miembro_id`, `categoria_egreso_id` en `app/models/pago.py` y `app/models/finanzas.py`; reportes en `app/services/reportes.py` |
 | RN-16 | Español correcto, UTF-8, tildes y ñ | Plantillas y mensajes en `app/templates/` y `app/services/`; revisión de copy de `specs/UAT.md` (CA-19) |
 | RN-17 | Orden de imputación | `app/services/pagos.py::registrar_pago`; `tests/test_imputacion.py` |
@@ -73,6 +73,7 @@
 | RN-24 | CLP con punto de miles y sin decimales | `app/core/formato.py`; `tests/test_formato.py` |
 | RN-25 | Cambio de categoría con historial y ajuste | `app/services/membresias.py`; `tests/test_membresias.py` |
 | RN-26 | Datos de la cuenta en plataforma y plantilla | `app/models/configuracion.py`, `app/seed.py`, `app/services/correo.py`; `tests/test_correo.py` |
+| RN-27 | Cobro de matrícula desde 01/09/2025 y exclusión de matriculados | `app/services/activacion.py` (`debe_cobrar_matricula`); `tests/test_activacion.py` |
 
 ## 3. Criterios de aceptación (CA)
 

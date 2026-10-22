@@ -56,7 +56,7 @@ Implementar una plataforma integral y robusta que centralice toda la gestión fi
 Cada funcionalidad describe el **comportamiento esperado** (qué hace), no cómo se implementa.
 
 ### A. Usuarios, acceso y seguridad
-- **F-01 — Registro de miembros.** El Admin/Tesorero puede incorporar un nuevo miembro con una **ficha ampliada**: nombre completo, correo electrónico (identificador único), teléfono, RUT, fecha de nacimiento, dirección y contacto de emergencia (ver D-6). La **fecha de incorporación** se captura automáticamente como la fecha de alta en el sistema (ver D-3).
+- **F-01 — Registro y edición de miembros.** El Admin/Tesorero puede incorporar un nuevo miembro y editar su **ficha ampliada**: nombre completo, correo electrónico (identificador único), teléfono, RUT, fecha de nacimiento, **fecha de ingreso**, dirección, contacto de emergencia y estado de **matriculado** (ver D-3 y D-6). La fecha de ingreso se propone como la fecha de alta en el sistema, pero queda editable para registrar la fecha real de incorporación al club.
 - **F-02 — Autenticación.** Cada usuario accede al sistema mediante inicio de sesión identificándose de forma única.
 - **F-03 — Control de permisos por rol.** El sistema restringe qué puede ver y hacer cada rol conforme a la sección 3 (Admin y Tesorero con permisos iguales; Miembro restringido a su propia información).
 - **F-04 — Autoconsulta del miembro.** El miembro puede ver únicamente su información personal y su propio estado de cuenta; no puede ver datos de otros miembros ni información financiera global del club.
@@ -67,7 +67,7 @@ Cada funcionalidad describe el **comportamiento esperado** (qué hace), no cómo
   - **Matrícula:** 5.000 CLP, pago único de incorporación.
   - **Membresía Estándar:** 5.000 CLP, cuota mensual **opción de apoyo**: para miembros que no quieren retirarse y siguen en contacto con el club (sin entrenamiento activo).
   - **Membresía Activa:** 15.000 CLP, cuota mensual **estándar para los alumnos** (miembros que entrenan activamente).
-- **F-07 — Activación de membresía.** Un miembro pasa a estado **Activo** solo cuando se ha completado el pago inicial: **Matrícula + la cuota de su categoría elegida** (Activa para alumnos, Estándar para miembros de apoyo; ver D-11 y RN-02).
+- **F-07 — Activación de membresía.** Un miembro pasa a estado **Activo** solo cuando se ha completado el pago inicial: **Matrícula + la cuota de su categoría elegida** (Activa para alumnos, Estándar para miembros de apoyo; ver D-11 y RN-02). La Matrícula no se cobra a quienes ya están marcados como **matriculados** ni a ingresos anteriores al **01/09/2025** (ver RN-27).
 - **F-08 — Registro de pagos.** El Admin/Tesorero registra los pagos recibidos de cada miembro (ver F-12 para el pago personalizado), asociándolos al tipo de cuota y al periodo/ciclo correspondiente.
 - **F-09 — Manejo de exenciones.** El sistema permite marcar a un miembro de forma que quede excluido automáticamente del pago en casos específicos: **becados**, **invitados/influencers** y **miembros retirados**. Un miembro exento no genera cobro mientras mantenga esa condición.
 - **F-10 — Ciclo de cobro mensual proactivo.** El sistema aplica la facturación mensual con **corte al día 5**: si el pago del mes se realiza **después del día 5**, la cuota se aplica automáticamente al **siguiente ciclo**.
@@ -113,9 +113,9 @@ Cada funcionalidad describe el **comportamiento esperado** (qué hace), no cómo
 ## 5. Flujos principales
 
 ### Flujo 1 — Incorporación y activación de un nuevo miembro
-1. El Admin/Tesorero registra los datos del nuevo miembro (ficha ampliada, incluida su fecha de nacimiento).
-2. El sistema fija la **fecha de incorporación** como la fecha de alta en el sistema (D-3).
-3. El sistema genera la obligación inicial: **Matrícula + la cuota de la categoría elegida** (Activa o Estándar; ver RN-02).
+1. El Admin/Tesorero registra los datos del nuevo miembro (ficha ampliada, incluida su fecha de nacimiento y fecha de ingreso).
+2. El sistema propone la **fecha de ingreso** como la fecha de alta, pero permite ajustarla a la fecha real de incorporación al club (D-3).
+3. El sistema genera la obligación inicial: **Matrícula + la cuota de la categoría elegida** (Activa o Estándar; ver RN-02). La Matrícula se omite si el miembro ya está matriculado o ingresó antes del 01/09/2025 (RN-27).
 4. El miembro permanece **pendiente** hasta completar ese pago inicial.
 5. Al registrarse el pago completo, el miembro queda en estado **Activo**.
 
@@ -205,8 +205,8 @@ Descripción de pantallas, vistas y comportamiento esperado (sin detalle de cód
 
 Información que debe manejarse, su significado y sus relaciones conceptuales (sin estructura técnica).
 
-- **Datos del miembro (ficha ampliada, D-6).** Nombre completo, **correo electrónico (identificador único)**, teléfono, RUT, fecha de nacimiento, dirección y contacto de emergencia.
-- **Fecha de incorporación.** Fecha de alta del miembro en el sistema (D-3).
+- **Datos del miembro (ficha ampliada, D-6).** Nombre completo, **correo electrónico (identificador único)**, teléfono, RUT, fecha de nacimiento, fecha de ingreso, dirección, contacto de emergencia y estado de **matriculado**.
+- **Fecha de ingreso.** Fecha real de incorporación al club. Se propone la fecha de alta en el sistema, pero es editable (D-3).
 - **Categoría de membresía.** **Activo** (alumno, cuota Activa) o **Membresía** (apoyo, cuota Estándar). El miembro puede cambiar de categoría y el **cambio queda registrado** (D-26).
 - **Situación de activación.** **Pendiente** (sin pago inicial) o **Activo** (con pago inicial completo).
 - **Condición de morosidad.** **Al día** o **Moroso**, con antigüedad de la deuda (para los colores).
@@ -241,7 +241,7 @@ Información que debe manejarse, su significado y sus relaciones conceptuales (s
 ## 8. Reglas de negocio
 
 - **RN-01 — Montos fijos.** Matrícula = 5.000 CLP (única); Membresía Estándar = 5.000 CLP (mensual); Membresía Activa = 15.000 CLP (mensual).
-- **RN-02 — Condición de activación.** Un miembro solo es **Activo** si completó el pago de **Matrícula + la cuota de su categoría elegida** (Activa para alumnos o Estándar para miembros de apoyo). Esta decisión (D-11) prevalece sobre la redacción literal de `AGENT.md`, que indicaba "Matrícula + Estándar".
+- **RN-02 — Condición de activación.** Un miembro solo es **Activo** si completó el pago de **Matrícula + la cuota de su categoría elegida** (Activa para alumnos o Estándar para miembros de apoyo). La Matrícula se excluye cuando el miembro ya está marcado como **matriculado** o cuando su fecha de ingreso es anterior al **01/09/2025** (RN-27). Esta decisión (D-11) prevalece sobre la redacción literal de `AGENT.md`, que indicaba "Matrícula + Estándar".
 - **RN-03 — Corte de cobro al día 5.** Si el pago del mes se realiza después del día 5, la cuota se aplica al siguiente ciclo mensual.
 - **RN-04 — Mora.** Si el miembro no paga dentro del mes, la cuota se **acumula como deuda** y el miembro pasa a condición **Moroso**, conservando el acceso de consulta a su estado de cuenta (D-1).
 - **RN-05 — Exención automática.** Los miembros becados, invitados/influencers y retirados quedan excluidos automáticamente del cobro y de los avisos mientras mantengan esa condición.
@@ -253,7 +253,7 @@ Información que debe manejarse, su significado y sus relaciones conceptuales (s
 - **RN-11 — Identificador único del miembro.** El **correo electrónico** es el identificador único del miembro (D-6).
 - **RN-12 — Recurrencia mensual.** Las cuotas de membresía y los gastos fijos operativos son de periodicidad mensual.
 - **RN-13 — Avisos de morosidad (manual).** El sistema **no** envía correos automáticos: resalta la morosidad con colores, **avisa al Tesorero** y ofrece una **plantilla** para que el Tesorero envíe el correo (D-8, D-13, D-21).
-- **RN-14 — Fecha de incorporación.** Se registra automáticamente igual a la fecha de alta en el sistema (D-3).
+- **RN-14 — Fecha de ingreso.** Se propone la fecha de alta en el sistema, pero el Admin/Tesorero puede ajustarla para reflejar la fecha real de incorporación al club (D-3).
 - **RN-15 — Trazabilidad.** Todo ingreso y egreso queda vinculado a su fecha, monto y, cuando corresponda, a un miembro y a una categoría.
 - **RN-16 — Idioma y estilo.** Todo el contenido textual debe cumplir el estándar de codificación UTF-8 y las reglas ortográficas de la RAE, con tildes correctas y uso de la "ñ".
 - **RN-17 — Imputación de pagos.** El monto se imputa primero a la **deuda más antigua**, luego a los **meses/año indicados** y, finalmente, el excedente como **abono** (D-14).
@@ -266,6 +266,7 @@ Información que debe manejarse, su significado y sus relaciones conceptuales (s
 - **RN-24 — Presentación de montos.** Todos los montos se expresan en **CLP**, con separador de miles por punto y **sin decimales** (D-23).
 - **RN-25 — Cambio de categoría.** Un miembro puede cambiar entre **Activo** y **Membresía**; cada cambio queda registrado y ajusta la cuota mensual (D-26).
 - **RN-26 — Datos de la cuenta.** Los datos de la cuenta bancaria (titular, banco, cuenta corriente, RUT y correo) se usan en la plataforma y en la plantilla de correo (D-22).
+- **RN-27 — Cobro de matrícula.** La Matrícula se cobra solo a miembros **no matriculados** cuya fecha de ingreso sea igual o posterior al **01/09/2025**. Los miembros antiguos se marcan como **matriculados** para no generarles ese cobro (D-27).
 
 ---
 
@@ -298,7 +299,7 @@ Comportamiento esperado ante situaciones anómalas.
 
 Condiciones observables y comprobables para verificar cada funcionalidad.
 
-- **CA-01 (F-07/RN-02):** Al registrar un miembro y completar el pago inicial (**Matrícula + la cuota de su categoría**), el sistema lo muestra como **Activo**; con pago parcial, queda **pendiente**.
+- **CA-01 (F-07/RN-02/RN-27):** Al registrar un miembro y completar el pago inicial (**Matrícula + la cuota de su categoría**, o solo la cuota si ya está matriculado), el sistema lo muestra como **Activo**; con pago parcial, queda **pendiente**.
 - **CA-02 (F-06/RN-01):** El sistema presenta la Matrícula en 5.000 CLP como pago único, y las membresías Estándar y Activa en 5.000 y 15.000 CLP como cuotas mensuales.
 - **CA-03 (F-09/RN-05):** Al marcar a un miembro como becado, invitado/influencer o retirado, el sistema deja de generar cobros y avisos para él y muestra su cuota como **exenta**.
 - **CA-04 (F-10/RN-03):** Un pago registrado después del día 5 del mes queda imputado al siguiente ciclo, y el estado de cuenta lo refleja.
@@ -381,10 +382,10 @@ Condiciones observables y comprobables para verificar cada funcionalidad.
 | :--- | :--- | :--- |
 | **D-1** | Impago / mora | La cuota impaga se **acumula como deuda**; el miembro pasa a condición **Moroso** y **conserva** el acceso de consulta a su estado de cuenta hasta regularizar. |
 | **D-2** | Significado de las cuotas | **Membresía Activa (15.000 CLP)** = cuota estándar de los **alumnos**. **Membresía Estándar (5.000 CLP)** = opción para miembros que **no quieren retirarse** y siguen en contacto con el club (apoyo). |
-| **D-3** | Fecha de incorporación | Es la **fecha de registro/alta** en el sistema, capturada automáticamente al crear al miembro. |
+| **D-3** | Fecha de ingreso | Se propone la **fecha de registro/alta** en el sistema al crear al miembro, pero queda **editable** para reflejar la fecha real de incorporación al club. |
 | **D-4** | Informe calendario | El **miembro** lo visualiza en **solo lectura**; el **Admin/Tesorero** lo visualizan y lo **exportan**. Muestra estado y monto en dinero. |
 | **D-5** | Categorías de egreso | **Base fija** (Activos, Gastos fijos, Transferencias, Tarjeta y Otros) **+ categorías personalizadas** creadas por el Admin/Tesorero. |
-| **D-6** | Datos del miembro | **Ficha ampliada**: nombre completo, **correo electrónico (identificador único)**, teléfono, RUT, fecha de nacimiento, dirección y contacto de emergencia. |
+| **D-6** | Datos del miembro | **Ficha ampliada**: nombre completo, **correo electrónico (identificador único)**, teléfono, RUT, fecha de nacimiento, fecha de ingreso, dirección, contacto de emergencia y estado de **matriculado**. |
 | **D-7** | Permisos Admin/Tesorero | Ambos tienen **permisos iguales** en todas las áreas (usuarios, membresías, finanzas y reportes). |
 | **D-8** | Avisos de morosidad | Aviso **en la plataforma** (colores + alerta al Tesorero) y **correo MANUAL** enviado por el Tesorero con una plantilla. *(Revisado: antes era correo automático; ver C-5.)* |
 | **D-9** | Responsable del activo | Es el miembro **encargado de gestionar la compra** (sin implicar un cobro a su persona). |
@@ -405,6 +406,7 @@ Condiciones observables y comprobables para verificar cada funcionalidad.
 | **D-24** | Landing page y stack | Landing con secciones (Header/Nav, Hero, Quiénes somos, Membresías, Cómo funciona, Datos de transferencia, Contacto, Footer), con **FastAPI + Jinja2 + HTML/CSS + Tailwind CSS + Alpine.js**. |
 | **D-25** | Impuestos | Los pagos **no generan impuestos**; solo se registran y la morosidad se refleja por estado y color. |
 | **D-26** | Cambio de categoría | Los miembros pueden cambiar entre **Activo** y **Membresía** (y viceversa); cada cambio queda registrado y ajusta la cuota. |
+| **D-27** | Matrícula y miembros antiguos | Los miembros antiguos se marcan como **matriculados** para no volver a cobrarles la Matrícula. El cobro de Matrícula rige desde el **01/09/2025** para los miembros nuevos no matriculados. |
 
 ### Preguntas abiertas restantes
 

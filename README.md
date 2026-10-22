@@ -69,8 +69,10 @@ La semilla (paso 7) crea el catálogo de cuotas (5.000 / 5.000 / 15.000 CLP),
 las categorías de egreso base, la cuenta bancaria para transferencias, la
 plantilla de correo y un conjunto de miembros de ejemplo en los cuatro estados
 de morosidad. Cada miembro recibe además su **obligación inicial** (Matrícula +
-la cuota de su categoría; Flujo 1). Volver a ejecutarla **no duplica datos** e
-imprime las credenciales de prueba (Admin, Tesorero y un Miembro).
+la cuota de su categoría; Flujo 1). La Matrícula se omite para miembros ya
+matriculados y para ingresos anteriores al 01/09/2025. Volver a ejecutar la
+semilla **no duplica datos** e imprime las credenciales de prueba (Admin,
+Tesorero y un Miembro).
 
 ## Configuración
 

@@ -132,6 +132,7 @@ def miembro_factory(db):
         exento: bool = False,
         motivo_exencion: str | None = None,
         fecha_incorporacion=None,
+        matriculado: bool = False,
         usuario_id: int | None = None,
     ):
         numero = next(contador)
@@ -148,6 +149,7 @@ def miembro_factory(db):
             condicion_especial=CONDICION_EXENTO if exento else CONDICION_NORMAL,
             motivo_exencion=motivo_exencion,
             fecha_incorporacion=fecha_incorporacion,
+            matriculado=matriculado,
             usuario_id=usuario_id,
         )
         db.commit()

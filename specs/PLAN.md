@@ -155,7 +155,7 @@ Persistencia relacional. Los montos son **enteros en CLP**. Se indican entidades
 
 | Entidad | Propiedades clave | Relaciones | Estados |
 | :--- | :--- | :--- | :--- |
-| **Miembro** | `id` (PK), `nombre_completo`, `email` (única), `telefono`, `rut`, `fecha_nacimiento`, `direccion`, `contacto_emergencia`, `fecha_incorporacion`, `categoria`, `situacion_activacion`, `condicion_especial`, `motivo_exencion`, `usuario_id` (FK, opcional) | N–1 Usuario; 1–N CuotaMensual, Pago, HistorialCategoria | categoria: activo/membresia; activación: pendiente/activo; especial: normal/exento (becado, invitado, retirado) |
+| **Miembro** | `id` (PK), `nombre_completo`, `email` (única), `telefono`, `rut`, `fecha_nacimiento`, `direccion`, `contacto_emergencia`, `fecha_incorporacion` (fecha de ingreso), `matriculado`, `categoria`, `situacion_activacion`, `condicion_especial`, `motivo_exencion`, `usuario_id` (FK, opcional) | N–1 Usuario; 1–N CuotaMensual, Pago, HistorialCategoria | categoria: activo/membresia; activación: pendiente/activo; especial: normal/exento (becado, invitado, retirado); matriculado: sí/no |
 | **HistorialCategoria** | `id` (PK), `miembro_id` (FK), `categoria_anterior`, `categoria_nueva`, `fecha`, `usuario_id` (FK) | N–1 Miembro | — |
 | **NivelCuota** | `id` (PK), `codigo` (matricula/estandar/activa), `nombre`, `monto_clp`, `tipo` (unico/mensual), `activo` | 1–N CuotaMensual | activo/inactivo |
 | **CuotaMensual** | `id` (PK), `miembro_id` (FK), `anio`, `mes`, `nivel_cuota_id` (FK), `monto_clp`, `monto_pagado_clp`, `estado` | N–1 Miembro, NivelCuota; 1–N ImputacionPago | pendiente/pagada/parcial/exenta |
@@ -239,7 +239,7 @@ Nombres sugeridos, responsabilidad, parámetros, resultado y dependencias. (Sin 
 - `requiere_rol(*roles) -> Callable` → dependencia de FastAPI que restringe por rol (admin/tesorero tienen los mismos permisos, D-7).
 
 **`services/activacion.py`**
-- `evaluar_activacion(miembro, pagos_validos) -> EstadoActivacion` → decide si el pago inicial (Matrícula + cuota de la categoría) está completo (RN-02).
+- `evaluar_activacion(miembro, pagos_validos) -> EstadoActivacion` → decide si el pago inicial (Matrícula + cuota de la categoría) está completo (RN-02). La Matrícula se omite si el miembro está marcado como matriculado o ingresó antes del 01/09/2025 (RN-27).
 - `aplicar_activacion(miembro) -> None` → marca al miembro como activo.
 
 **`services/membresias.py`**
@@ -297,7 +297,7 @@ Nombres sugeridos, responsabilidad, parámetros, resultado y dependencias. (Sin 
 
 Colaboración de módulos para los flujos de `SPECS.md` (sección 5).
 
-- **Flujo 1 — Incorporación y activación:** `routers/miembros` (POST) → valida con `schemas` → `services/membresias.crear_miembro` fija `fecha_incorporacion` → `services/activacion.evaluar_activacion` al registrarse el pago inicial → `repositories` persiste → redirección al perfil.
+- **Flujo 1 — Incorporación y activación:** `routers/miembros` (POST) → valida con `schemas` → `services/membresias.crear_miembro` registra la fecha de ingreso (editable, por defecto hoy) y el estado de matrícula → `services/activacion.evaluar_activacion` al registrarse el pago inicial → `repositories` persiste → redirección al perfil.
 - **Flujo 3 — Pago personalizado:** `routers/pagos` → `services/pagos.registrar_pago` (transacción) → `imputar_pago` aplica RN-17 → `generar_abono`/`aplicar_abono` (RN-18) → `repositories` guarda Pago, Imputaciones y Abono → `templates/pagos` muestra el resultado.
 - **Flujo 4 — Mora y aviso manual:** `services/morosidad.calcular_morosidad` (job o cálculo al abrir la vista) → `clasificar_color` → `listar_morosos` alimenta `templates/morosidad` → `correo.renderizar_plantilla` produce el texto → el Tesorero **envía manualmente** → `marcar_aviso_enviado`.
 - **Flujo 5 — Negociación:** `routers/negociaciones` → `negociacion.puede_negociar`/`calcular_monto_negociado` → `crear_negociacion` → al pagar, `registrar_pago_negociacion` descarga la deuda.

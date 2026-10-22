@@ -1,20 +1,26 @@
 """Activación de la membresía: obligación inicial y evaluación del pago inicial.
 
-Cubre F-07, RN-02, CA-01 y la decisión D-11: un miembro solo queda **Activo**
-cuando completó el pago de **Matrícula + la cuota de su categoría elegida**
-(Activa para alumnos, Estándar para miembros de apoyo). Con pago parcial queda
-**pendiente**.
+Cubre F-07, RN-02, RN-27, CA-01 y la decisión D-11: un miembro solo queda
+**Activo** cuando completó el pago de **Matrícula + la cuota de su categoría
+elegida** (Activa para alumnos, Estándar para miembros de apoyo). La Matrícula se
+omite para miembros ya matriculados o con fecha de ingreso anterior al
+01/09/2025. Con pago parcial queda **pendiente**.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 
 from sqlalchemy.orm import Session
 
 from app.models.membresia import CuotaMensual, NivelCuota
 from app.models.miembro import ACTIVACION_ACTIVO, Miembro
 from app.repositories import membresia as repo_membresia
+
+# La matrícula se cobra desde septiembre de 2025, salvo que el miembro ya esté
+# marcado como matriculado (miembros antiguos del club).
+FECHA_INICIO_COBRO_MATRICULA = date(2025, 9, 1)
 
 
 @dataclass
@@ -57,6 +63,19 @@ class EstadoActivacion:
         return self.requerido_clp > 0 and self.saldo_clp == 0
 
 
+def debe_cobrar_matricula(miembro: Miembro) -> bool:
+    """Indica si corresponde generar la Matrícula para este miembro.
+
+    Los miembros antiguos se marcan como ``matriculado`` para no volver a
+    cobrarles la incorporación. Para los miembros nuevos, el cobro rige desde
+    septiembre de 2025 (decisión del club).
+    """
+    return (
+        not miembro.matriculado
+        and miembro.fecha_incorporacion >= FECHA_INICIO_COBRO_MATRICULA
+    )
+
+
 def nivel_de_categoria_actual(
     db: Session, miembro: Miembro
 ) -> NivelCuota | None:
@@ -68,21 +87,23 @@ def obligacion_inicial(
     db: Session,
     miembro: Miembro,
     *,
-    nivel_matricula: NivelCuota,
+    nivel_matricula: NivelCuota | None,
     nivel_categoria: NivelCuota,
 ) -> list[ConceptoObligacion]:
     """Compone la obligación inicial del Flujo 1 (RN-02, D-11).
 
-    El monto pagado de cada concepto se toma de la cuota registrada en el mes de
-    incorporación; si el pago aún no se ha registrado, se informa 0.
+    La Matrícula solo se incluye cuando corresponde cobrarla. El monto pagado de
+    cada concepto se toma de la cuota registrada en el mes de incorporación; si
+    el pago aún no se ha registrado, se informa 0.
     """
     anio = miembro.fecha_incorporacion.year
     mes = miembro.fecha_incorporacion.month
     conceptos: list[ConceptoObligacion] = []
-    for etiqueta, nivel in (
-        ("Matrícula", nivel_matricula),
-        (nivel_categoria.nombre, nivel_categoria),
-    ):
+    niveles: list[tuple[str, NivelCuota]] = []
+    if nivel_matricula is not None:
+        niveles.append(("Matrícula", nivel_matricula))
+    niveles.append((nivel_categoria.nombre, nivel_categoria))
+    for etiqueta, nivel in niveles:
         cuota = repo_membresia.obtener_cuota(db, miembro.id, anio, mes, nivel.id)
         conceptos.append(
             ConceptoObligacion(
@@ -100,10 +121,12 @@ def evaluar_activacion(db: Session, miembro: Miembro) -> EstadoActivacion:
     Nota: el monto pagado proviene de las cuotas de la obligación inicial, es
     decir, de los pagos efectivamente aplicados a esos conceptos (RN-02).
     """
-    nivel_matricula = repo_membresia.nivel_matricula(db)
     nivel_categoria = nivel_de_categoria_actual(db, miembro)
-    if nivel_matricula is None or nivel_categoria is None:
+    if nivel_categoria is None:
         return EstadoActivacion()
+    nivel_matricula = (
+        repo_membresia.nivel_matricula(db) if debe_cobrar_matricula(miembro) else None
+    )
     conceptos = obligacion_inicial(
         db,
         miembro,
@@ -123,14 +146,14 @@ def aplicar_activacion(db: Session, miembro: Miembro) -> Miembro:
 
 
 def registrar_obligacion_inicial(db: Session, miembro: Miembro) -> list[CuotaMensual]:
-    """Genera la obligación inicial: Matrícula + la cuota de la categoría (Flujo 1).
+    """Genera la obligación inicial: Matrícula (si corresponde) + cuota de categoría.
 
     Es idempotente: no vuelve a crear un concepto que ya exista para ese periodo.
     """
     anio = miembro.fecha_incorporacion.year
     mes = miembro.fecha_incorporacion.month
-    niveles = [
-        repo_membresia.nivel_matricula(db),
+    niveles: list[NivelCuota | None] = [
+        repo_membresia.nivel_matricula(db) if debe_cobrar_matricula(miembro) else None,
         repo_membresia.nivel_de_categoria(db, miembro.categoria),
     ]
     creadas: list[CuotaMensual] = []

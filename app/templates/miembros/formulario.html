@@ -1,17 +1,24 @@
 {% extends "panel/base_panel.html" %}
-{% from "miembros/_campos.html" import campo, campo_categoria %}
+{% from "miembros/_campos.html" import campo, campo_categoria, campo_check %}
 
 {% block titulo %}{{ titulo }} · {{ app_name }}{% endblock %}
 
 {% block panel %}
 <div class="flex flex-wrap items-baseline justify-between gap-2">
   <h1 class="text-2xl font-bold">{{ titulo }}</h1>
-  <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+  <a href="{{ cancelar_url }}" class="text-sm text-gray-600 hover:text-marca-rojo">
+    ← {{ "Volver a la ficha" if edicion else "Volver al listado" }}
+  </a>
 </div>
 
 <p class="mt-1 text-sm text-gray-500">
-  Completa la ficha ampliada del miembro (D-6). La <strong>fecha de incorporación</strong>
-  se captura automáticamente como la fecha de alta en el sistema (D-3).
+  {% if edicion %}
+    Actualiza los datos del atleta. La <strong>fecha de ingreso</strong> es la
+    fecha real en que se incorporó al club.
+  {% else %}
+    Completa la ficha del atleta. La <strong>fecha de ingreso</strong> se puede
+    ajustar a la fecha real de incorporación al club.
+  {% endif %}
 </p>
 
 <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
@@ -23,23 +30,48 @@
     {{ campo("telefono", "Teléfono", errores, datos.get("telefono", ""), "tel", "+56 9 1234 5678") }}
     {{ campo("rut", "RUT", errores, datos.get("rut", ""), "text", "12.345.678-9") }}
     {{ campo("fecha_nacimiento", "Fecha de nacimiento", errores, datos.get("fecha_nacimiento", ""), "date") }}
+    {{ campo("fecha_incorporacion", "Fecha de ingreso", errores, datos.get("fecha_incorporacion", ""), "date") }}
     {{ campo("direccion", "Dirección", errores, datos.get("direccion", ""), "text", "Calle 123, Osorno") }}
     {{ campo("contacto_emergencia", "Contacto de emergencia", errores, datos.get("contacto_emergencia", ""), "text", "Nombre y teléfono") }}
-    {{ campo_categoria(categorias, categoria, errores.get("categoria", "")) }}
+
+    {% if edicion %}
+      <div>
+        <label class="block text-xs font-medium text-gray-600">Categoría</label>
+        <p class="mt-1 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+          {{ "Activo (alumno) · cuota Activa" if categoria == "activo" else "Membresía (apoyo) · cuota Estándar" }}
+        </p>
+        <p class="mt-1 text-xs text-gray-500">
+          La categoría se cambia desde la ficha del miembro.
+        </p>
+      </div>
+    {% else %}
+      {{ campo_categoria(categorias, categoria, errores.get("categoria", "")) }}
+    {% endif %}
+
+    {{ campo_check(
+      "matriculado",
+      "Ya está matriculado",
+      matriculado,
+      "Marca esta opción para no generar el cobro de matrícula. Todos los atletas antiguos del club deben quedar marcados.",
+      errores.get("matriculado", "")
+    ) }}
 
     <div class="sm:col-span-2 mt-2 flex items-center gap-3">
       <button type="submit"
               class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
-        Registrar miembro
+        {{ "Guardar cambios" if edicion else "Registrar miembro" }}
       </button>
-      <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">Cancelar</a>
+      <a href="{{ cancelar_url }}" class="text-sm text-gray-600 hover:text-marca-rojo">Cancelar</a>
     </div>
   </form>
 </div>
 
+{% if not edicion %}
 <p class="mt-4 text-xs text-gray-500">
   Al registrar el miembro, el sistema genera su obligación inicial:
   <strong>Matrícula + la cuota de la categoría elegida</strong> (Flujo 1, RN-02).
-  Queda <strong>pendiente</strong> hasta completar ese pago.
+  Si marcas <strong>Ya está matriculado</strong>, solo se genera la cuota de la
+  categoría. Queda <strong>pendiente</strong> hasta completar ese pago.
 </p>
+{% endif %}
 {% endblock %}

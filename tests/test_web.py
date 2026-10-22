@@ -316,3 +316,71 @@ def test_alta_con_datos_invalidos_no_guarda(
     from app.models.miembro import Miembro
 
     assert db.scalar(select(func.count()).select_from(Miembro)) == 0
+
+
+def test_listado_enlaza_a_edicion_y_muestra_matricula(
+    cliente, usuario_factory, miembro_factory
+):
+    """El nombre del atleta abre el formulario de edición y muestra matrícula."""
+    usuario_factory(email="admin@example.com", password="Clave1234")
+    miembro = miembro_factory(nombre="Atleta Editable", matriculado=True)
+    _sesion(cliente, "admin@example.com", "Clave1234")
+
+    respuesta = cliente.get("/miembros")
+
+    assert respuesta.status_code == 200
+    assert f'href="/miembros/{miembro.id}/editar"' in respuesta.text
+    assert "Atleta Editable" in respuesta.text
+    assert "Matrícula" in respuesta.text
+    assert "Ver ficha" in respuesta.text
+
+
+def test_admin_abre_formulario_de_edicion(
+    cliente, usuario_factory, miembro_factory
+):
+    """Admin y Tesorero pueden abrir la edición completa desde el listado."""
+    usuario_factory(email="admin@example.com", password="Clave1234")
+    miembro = miembro_factory(
+        nombre="Atleta Editable",
+        fecha_incorporacion=date(2025, 9, 1),
+        matriculado=True,
+    )
+    _sesion(cliente, "admin@example.com", "Clave1234")
+
+    respuesta = cliente.get(f"/miembros/{miembro.id}/editar")
+
+    assert respuesta.status_code == 200
+    assert "Editar miembro" in respuesta.text
+    assert "Fecha de ingreso" in respuesta.text
+    assert "Ya está matriculado" in respuesta.text
+    assert 'value="2025-09-01"' in respuesta.text
+
+
+def test_edicion_guarda_fecha_de_ingreso_y_matricula(
+    cliente, db, usuario_factory, miembro_factory
+):
+    """La ficha de edición actualiza fecha de ingreso y estado de matrícula."""
+    usuario_factory(email="admin@example.com", password="Clave1234")
+    miembro = miembro_factory(
+        nombre="Atleta Editable",
+        fecha_incorporacion=date(2026, 1, 1),
+    )
+    _sesion(cliente, "admin@example.com", "Clave1234")
+    respuesta = cliente.get(f"/miembros/{miembro.id}/editar")
+    token = _csrf(respuesta.text)
+
+    guardado = cliente.post(
+        f"/miembros/{miembro.id}/editar",
+        data={
+            **FICHA,
+            "csrf_token": token,
+            "fecha_incorporacion": "2025-09-01",
+            "matriculado": "true",
+        },
+        follow_redirects=False,
+    )
+
+    assert guardado.status_code == 303
+    db.refresh(miembro)
+    assert miembro.fecha_incorporacion == date(2025, 9, 1)
+    assert miembro.matriculado is True
