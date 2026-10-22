@@ -133,6 +133,19 @@ npm run css:dev        # en otra terminal, solo si se edita la interfaz
 Comprueba el estado en <http://127.0.0.1:8000/salud>; debe responder con
 `base_de_datos: "ok"`.
 
+## Uso actual
+
+El sistema se usa actualmente en **modo local personal**, en el PC del usuario:
+
+- Servidor **Uvicorn + FastAPI** en <http://127.0.0.1:8000>.
+- Base de datos **MySQL/MariaDB de XAMPP**, sin exposición a Internet.
+- Registro de pagos, socios, membresías y finanzas del club.
+- **Sin acceso público, VPS, Cloudflare ni despliegue productivo.**
+- GitHub solo almacena el código y la documentación; no ejecuta la aplicación.
+
+La publicación futura (Cloudflare Tunnel, VPS o Docker) está planificada, pero
+**no ejecutada**, en [`docs/POST_MVP.md`](docs/POST_MVP.md).
+
 ## Pruebas
 
 La suite usa **SQLite en memoria** por defecto, así que no necesita XAMPP:
@@ -172,9 +185,9 @@ y [`specs/COBERTURA.md`](specs/COBERTURA.md).
   declarados que falten (T9.1) sin borrar datos.
 - Los catálogos de niveles de cuota, cuenta bancaria y categorías de egreso se
   cachean 60 segundos en proceso y se invalidan al modificarlos (T9.4).
-- El MVP está pensado para el **entorno local** (Uvicorn + MySQL de XAMPP).
-  La publicación productiva, el proxy inverso/HTTPS y los respaldos quedan como
-  trabajo **post-MVP** (Q-3). Ver
+- El uso actual es **local personal** (Uvicorn + MySQL de XAMPP), sin
+  publicación pública. La publicación productiva, el proxy inverso/HTTPS y los
+  respaldos quedan como trabajo **post-MVP** (Q-3). Ver
   [`docs/POST_MVP.md`](docs/POST_MVP.md) y
   [`docs/DESPLIEGUE_LOCAL.md`](docs/DESPLIEGUE_LOCAL.md).
 
@@ -211,7 +224,7 @@ OR/
 │   ├── routers/                Rutas web por módulo
 │   ├── templates/              Plantillas Jinja2
 │   └── static/                 CSS de Tailwind, JS y recursos
-├── docs/                       Guía de despliegue local
+├── docs/                       Guía local y plan post-MVP
 ├── specs/                      Documentación oficial
 ├── tests/                      Suite pytest (SQLite/MySQL)
 ├── dev.ps1                     Arranque local con verificaciones

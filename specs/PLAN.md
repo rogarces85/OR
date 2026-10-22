@@ -415,8 +415,19 @@ Colaboración de módulos para los flujos de `SPECS.md` (sección 5).
 | :--- | :--- | :--- |
 | **Q-1** | Paleta y colores de morosidad | **Valores por defecto de Tailwind**: Rojo `red-600` (#DC2626), Negro `black` (#000000), Blanco `white` (#FFFFFF); morosidad verde `green-600` (#16A34A), naranjo `amber-500` (#F59E0B), rojo `red-500` (#EF4444). |
 | **Q-2** | Sesión y CSRF | **Confirmada** la propuesta: sesión firmada en cookie `HttpOnly` con `SameSite=Lax` + token CSRF en formularios de escritura. |
-| **Q-3** | Publicación y respaldos | **Solo entorno local** (Uvicorn + MySQL de XAMPP) para el MVP; publicación productiva y respaldos quedan como trabajo **post-MVP**. |
+| **Q-3** | Publicación y respaldos | **Uso actual personal/local** (Uvicorn + MySQL de XAMPP en `127.0.0.1:8000`), sin acceso público. La publicación productiva y los respaldos quedan como trabajo **post-MVP** documentado en `docs/POST_MVP.md` (no ejecutado). |
 | **Q-4** | Nombre de la base de datos | **`osorno_runners`**. |
+
+### Uso actual
+
+- El sistema se usa **solo en el PC del usuario**, para el registro personal de
+  pagos del club.
+- Se ejecuta con **Uvicorn + FastAPI** en `http://127.0.0.1:8000` y
+  **MySQL/MariaDB de XAMPP**.
+- **No hay acceso público ni despliegue productivo.** GitHub solo almacena el
+  código y la documentación.
+- La publicación futura (Cloudflare Tunnel, VPS o Docker) está documentada en
+  `docs/POST_MVP.md` y no se ha ejecutado.
 
 ### Pendientes (post-MVP, no bloqueantes)
 

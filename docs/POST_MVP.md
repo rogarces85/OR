@@ -5,6 +5,11 @@
 > XAMPP). Este documento define cómo publicarlo cuando exista servidor, dominio
 > y responsables de operación.
 >
+> **Uso actual:** exclusivamente personal/local en el PC del usuario, con
+> Uvicorn en <http://127.0.0.1:8000> y MySQL/MariaDB de XAMPP. No hay acceso
+> público, VPS, Cloudflare ni despliegue productivo. GitHub solo almacena el
+> código.
+>
 > **No se ha desplegado nada en producción ni se han creado credenciales,
 > dominios, certificados o respaldos reales.** Este archivo cierra el pendiente
 > documental para que la ejecución futura sea una tarea acotada y verificable.
@@ -26,10 +31,10 @@ morosidad siguen siendo manuales mediante `mailto:` (P-2).
 
 ## 2. Arquitectura de referencia
 
-Hay dos alternativas válidas. La decisión final depende del proveedor y del
-equipo que operará el sistema.
+Hay tres alternativas válidas. La decisión final depende del proveedor, la
+disponibilidad esperada y el equipo que operará el sistema.
 
-### Opción A — Docker Compose + Caddy (recomendada para simplicidad)
+### Opción A — Docker Compose + Caddy (recomendada para producción)
 
 - Contenedor de aplicación con Uvicorn.
 - Contenedor MySQL 8/MariaDB con volumen persistente.
@@ -48,13 +53,41 @@ equipo que operará el sistema.
 - Ventajas: menos capas y control directo del sistema.
 - Requisitos: administración de Linux, firewall y actualizaciones de seguridad.
 
-En ambos casos el flujo es: **cliente → HTTPS (proxy) → Uvicorn → MySQL**.
+### Opción C — Cloudflare Tunnel sobre el PC local
+
+- `cloudflared` se ejecuta en el PC y conecta **salida** hacia Cloudflare; no
+  requiere IP pública ni abrir puertos en el router.
+- Cloudflare termina el HTTPS público y enruta hacia `127.0.0.1:8000`.
+- La aplicación y MySQL de XAMPP siguen siendo locales; la base **no** se
+  expone.
+- Ventajas: dominio y HTTPS sin migrar la base; útil para uso personal o piloto.
+- Limitaciones: el PC debe estar encendido y con Internet estable; no ofrece
+  alta disponibilidad. Requiere cuenta Cloudflare y un dominio.
+- No confundir con Cloudflare Pages/Workers: no ejecutan este stack Python +
+  MySQL. Para publicar de forma permanente se prefiere la opción A o B.
+
+### Comparación rápida
+
+| Criterio | Docker + Caddy | VPS + Nginx/systemd | Cloudflare Tunnel |
+| :--- | :--- | :--- | :--- |
+| Dónde corre la app | Servidor con Docker | VPS Linux | PC local |
+| Disponibilidad | Alta | Alta | Depende del PC |
+| HTTPS | Automático | Certbot | Cloudflare |
+| Base de datos | Contenedor con volumen | MySQL del VPS | XAMPP local |
+| Complejidad inicial | Media | Media | Baja |
+| Recomendado para | Producción | Producción | Uso personal/piloto |
+
+En las opciones A y B el flujo es: **cliente → HTTPS (proxy) → Uvicorn →
+MySQL**. En la opción C: **cliente → Cloudflare → `cloudflared` → Uvicorn →
+MySQL local**.
 
 ## 3. Requisitos previos
 
 - Dominio o subdominio definido (por ejemplo, `pagos.osornorunners.cl`).
-- Registro DNS `A`/`AAAA` apuntando al servidor.
-- Servidor con IP pública, acceso administrativo y reloj sincronizado.
+- Según la opción: VPS con IP pública (A/B) o PC local con salida a Internet
+  (C).
+- Registro DNS `A`/`AAAA` hacia el servidor (A/B) o túnel de Cloudflare (C).
+- Servidor o PC con acceso administrativo y reloj sincronizado.
 - MySQL/MariaDB con base `osorno_runners` y usuario dedicado.
 - `SECRET_KEY` de producción generada aparte.
 - Responsable de operación, respaldos y restauración.
@@ -141,6 +174,24 @@ Estos cambios **no están aplicados** en el MVP local:
 9. Configurar respaldos, logs y monitoreo.
 10. Documentar la versión y el procedimiento de reversión.
 
+### Opción C — Cloudflare Tunnel (PC local)
+
+1. Tener el dominio administrado en Cloudflare y el PC con salida a Internet.
+2. Instalar `cloudflared` en Windows.
+3. Autenticar y crear el túnel (por ejemplo, `or-pagos`).
+4. Configurar el `ingress` para enviar el dominio a
+   `http://127.0.0.1:8000`.
+5. Registrar el hostname del túnel en DNS.
+6. Ejecutar `cloudflared tunnel run or-pagos` y comprobar el acceso externo.
+7. Instalar `cloudflared` como servicio para que arranque con Windows.
+8. Ejecutar Uvicorn sin `--reload`, con `--proxy-headers` y
+   `--forwarded-allow-ips` acotado al proxy local.
+9. Verificar `/salud`, landing, login y permisos por rol.
+10. Mantener MySQL en XAMPP solo local; no abrir 3306 ni publicar el puerto
+    8000 en el router.
+11. Programar respaldos locales y copiarlos fuera del PC.
+12. Documentar que la disponibilidad depende de que el PC permanezca encendido.
+
 ## 7. Respaldo y restauración
 
 ### Respaldo lógico
@@ -155,6 +206,11 @@ mysqldump \
   -u "$DB_USER" -p"$DB_PASSWORD" \
   "$DB_NAME" > "/respaldos/osorno_runners_$(date +%Y%m%d_%H%M%S).sql"
 ```
+
+En el PC local con XAMPP se puede usar
+`C:\xampp\mysql\bin\mysqldump.exe` y programar la tarea con el Programador de
+tareas de Windows. Guardar la copia fuera de la carpeta del proyecto y, si es
+posible, fuera del PC.
 
 ### Política mínima propuesta
 

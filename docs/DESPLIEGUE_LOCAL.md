@@ -4,6 +4,11 @@
 > de XAMPP** (P-8). La publicación productiva y los respaldos quedan como
 > trabajo post-MVP (Q-3); al final se resumen las consideraciones a revisar
 > cuando el sistema salga del entorno local.
+>
+> **Uso actual (vigente):** el sistema se usa de forma personal/local en el PC
+> del usuario, en <http://127.0.0.1:8000>, con la base MySQL/MariaDB de XAMPP.
+> No hay acceso público ni despliegue productivo. GitHub solo aloja el código y
+> la documentación, no ejecuta la aplicación.
 
 ## 1. Requisitos
 
@@ -178,8 +183,9 @@ ejecución queda pendiente de servidor y dominio. Antes de publicarlo:
 1. **Servidor y proceso:** definir el host, ejecutar Uvicorn sin `--reload`
    (por ejemplo, con un servicio de Windows, `systemd` o un contenedor) y
    considerar varios workers según la carga.
-2. **Proxy inverso y HTTPS:** publicar detrás de Nginx/Caddy o similar;
-   redirigir HTTP a HTTPS y configurar los encabezados de proxy.
+2. **Proxy inverso y HTTPS:** publicar detrás de Nginx/Caddy, con Cloudflare
+   Tunnel desde el PC local o con un proxy similar; redirigir HTTP a HTTPS y
+   configurar los encabezados de proxy.
 3. **Cookie de sesión:** cambiar `https_only=False` en `app/main.py` a `True`,
    mantener `HttpOnly` y `SameSite=Lax`, y usar una `SECRET_KEY` exclusiva del
    servidor.
