@@ -73,7 +73,7 @@ version: v1.0.0
 
 ## 7. Knowledge & decisions
 
-16. Toda decisión significativa se registra en `02-DOCS/wiki/sdd/decisions.md` (fecha, opciones,
+16. Toda decisión significativa se registra en [decisions.md](./decisions.md) (fecha, opciones,
     por qué). Esta constitución es el registro de mayor orden.
 
 ## Definition of Done (the merge bar `verify` runs against)

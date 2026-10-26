@@ -1,0 +1,67 @@
+{
+    "README.md":  {
+                      "hash":  "sha256:8937691765053dafc4e4a0a48b7e73e017f2e19f32f163df7d81d139fcef7569",
+                      "ingested":  "2026-10-26",
+                      "topic":  "proyecto"
+                  },
+    "specs/AGENT.md":  {
+                           "hash":  "sha256:6c7576271a9fd3c7c02e7c227847504fee55de0a8552b219a64968af3e1d5e81",
+                           "ingested":  "2026-10-26",
+                           "topic":  "proyecto"
+                       },
+    "specs/SPECS.md":  {
+                           "hash":  "sha256:d1d5d5455fce08b383cf8f14aaa293fee866161d79caa7fd6cb15d55ae62f163",
+                           "ingested":  "2026-10-26",
+                           "topic":  "proyecto"
+                       },
+    "specs/PLAN.md":  {
+                          "hash":  "sha256:c332892da0512a726578ee5d2d312f4d024c4e6d6ab5cc37ad2e66669abf2339",
+                          "ingested":  "2026-10-26",
+                          "topic":  "proyecto"
+                      },
+    "specs/TASK.md":  {
+                          "hash":  "sha256:fa331e52a1742aa8561d29f169238c626062ed765ab5ad85ee4bfc66211c92b5",
+                          "ingested":  "2026-10-26",
+                          "topic":  "proyecto"
+                      },
+    "specs/UAT.md":  {
+                         "hash":  "sha256:65456f2cb99dad61508dd8293468d56d846f797ca98d6c2bd3afba7e84831348",
+                         "ingested":  "2026-10-26",
+                         "topic":  "proyecto"
+                     },
+    "specs/COBERTURA.md":  {
+                               "hash":  "sha256:2a31a3bdef6eab58661d3a9aeb9c6f2583c6221116499d274a04f68f6e24e4ea",
+                               "ingested":  "2026-10-26",
+                               "topic":  "proyecto"
+                           },
+    "specs/GUIA_DEMO.md":  {
+                               "hash":  "sha256:836f97bf495ad1fd2e6e918c57251e436743fced0fb2fa09fb1bd6c322f39634",
+                               "ingested":  "2026-10-26",
+                               "topic":  "proyecto"
+                           },
+    "docs/DESPLIEGUE_LOCAL.md":  {
+                                     "hash":  "sha256:7204d7240277c7c75195c5583e371c96b7b1a94e077484d4bbe1ba02badccae4",
+                                     "ingested":  "2026-10-26",
+                                     "topic":  "proyecto"
+                                 },
+    "docs/POST_MVP.md":  {
+                             "hash":  "sha256:6122da8399adffe596c04e833c4a5d21bad9bef3bce73343331bd17af9c2d616",
+                             "ingested":  "2026-10-26",
+                             "topic":  "proyecto"
+                         },
+    "CLAUDE.md":  {
+                      "hash":  "sha256:692274200fee5a485fcaf28fddc3469e63aa8db35bfda59931379004487f2769",
+                      "ingested":  "2026-10-26",
+                      "topic":  "meta"
+                  },
+    "AGENTS.md":  {
+                      "hash":  "sha256:a2ed05ed124cf4056bb5a3cada25a569e5acff4a29484ac9df81ef0fe0a3bc78",
+                      "ingested":  "2026-10-26",
+                      "topic":  "meta"
+                  },
+    "01-TOOLS/README.md":  {
+                               "hash":  "sha256:703e432954905235d8b2221b8741c3c9dd11aa7f0546da4fec91deff15319ad0",
+                               "ingested":  "2026-10-26",
+                               "topic":  "operations"
+                           }
+}
