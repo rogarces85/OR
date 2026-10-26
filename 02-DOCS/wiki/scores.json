@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "spec": "okf-scores-1",
+    "formula": "inbound_links*2 + sources_count + cited_count*0.5 + freshness_weight(1.0) - conflict*3 - orphan_penalty(5 if no inbound AND no citations)",
+    "last_recomputed": "2026-10-26T23:55:00Z",
+    "interactions_since_improve": 1
+  },
+  "scores": {
+    "proyecto/vision.md": 14.0,
+    "proyecto/dominio.md": 9.0,
+    "proyecto/arquitectura.md": 11.0,
+    "proyecto/operacion.md": 9.0,
+    "proyecto/calidad.md": 11.0,
+    "stack/python.md": 9.0,
+    "stack/fastapi.md": 11.0,
+    "stack/base-datos.md": 12.0,
+    "stack/frontend.md": 7.0,
+    "sdd/constitution.md": 5.0,
+    "sdd/decisions.md": 3.0,
+    "ftd/2026-10-26-documentacion-completa.md": -4.0,
+    "harness/user-profile.md": 3.0,
+    "harness/installation-plan.md": 3.0,
+    "harness/decisions.md": 3.0,
+    "meta/plano-de-control.md": 5.0,
+    "operations/herramientas.md": 4.0
+  }
+}
