@@ -48,6 +48,7 @@ Documentos de característica de cada cambio autorizado (uno por feature).
 | Article | Summary | Updated | Score |
 |---------|---------|---------|-------|
 | [Documentación completa del proyecto](ftd/2026-10-26-documentacion-completa.md) | Bootstrap de la wiki 02-DOCS desde la documentación oficial. | 2026-10-26 | -4.0 |
+| [Baja y reactivación de miembros (soft-delete)](ftd/2026-10-27-baja-miembros.md) | Retiro lógico con fecha/motivo, fuera del panel y del cobro, reversible. | 2026-10-27 | -4.0 |
 
 ## harness
 
