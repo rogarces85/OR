@@ -37,9 +37,16 @@ def listar(
     texto: str | None = None,
     categoria: str | None = None,
     situacion: str | None = None,
+    incluir_bajas: bool = False,
 ) -> list[Miembro]:
-    """Lista miembros aplicando filtros de búsqueda, categoría y activación."""
+    """Lista miembros aplicando filtros de búsqueda, categoría y activación.
+
+    Por defecto excluye miembros con fecha de baja (soft-delete).
+    Usar ``incluir_bajas=True`` para listar también los retirados/suspendidos.
+    """
     consulta = select(Miembro).order_by(Miembro.nombre_completo)
+    if not incluir_bajas:
+        consulta = consulta.where(Miembro.fecha_baja.is_(None))
     if texto:
         patron = f"%{texto.strip()}%"
         consulta = consulta.where(
@@ -54,6 +61,11 @@ def listar(
     if situacion:
         consulta = consulta.where(Miembro.situacion_activacion == situacion)
     return list(db.scalars(consulta))
+
+
+def listar_todos(db: Session) -> list[Miembro]:
+    """Lista TODOS los miembros, incluyendo los de baja (para admins)."""
+    return list(db.scalars(select(Miembro).order_by(Miembro.nombre_completo)))
 
 
 def contar(db: Session) -> int:

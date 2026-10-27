@@ -32,16 +32,39 @@ def crear_esquema() -> None:
 
 
 def crear_indices_faltantes(bind=None) -> None:
-    """Crea los índices declarados que aún no existan en la base.
+    """Crea los índices declarados y columnas que falten en la base.
 
     ``create_all`` no modifica tablas ya creadas, por lo que este paso permite
-    aplicar los índices nuevos del MVP sin incorporar Alembic. Es seguro
-    ejecutarlo repetidamente: ``checkfirst`` omite los que ya están.
+    aplicar los índices y columnas nuevas del MVP sin incorporar Alembic. Es
+    seguro ejecutarlo repetidamente: ``checkfirst`` omite los que ya están.
     """
+    from sqlalchemy import inspect, text
     motor = bind or engine
+
+    # 1) Índices declarados en modelos
     for tabla in Base.metadata.sorted_tables:
         for indice in tabla.indexes:
             indice.create(bind=motor, checkfirst=True)
+
+    # 2) Migraciones idempotentes de columnas (MySQL/MariaDB)
+    inspector = inspect(motor)
+    columnas_miembros = {c["name"] for c in inspector.get_columns("miembros")}
+
+    with motor.begin() as conn:
+        # fecha_baja
+        if "fecha_baja" not in columnas_miembros:
+            conn.execute(text("ALTER TABLE miembros ADD COLUMN fecha_baja DATE NULL"))
+            print("Columna 'fecha_baja' agregada a miembros")
+        # motivo_baja
+        if "motivo_baja" not in columnas_miembros:
+            conn.execute(text("ALTER TABLE miembros ADD COLUMN motivo_baja VARCHAR(200) NULL"))
+            print("Columna 'motivo_baja' agregada a miembros")
+
+        # Índice para filtrar por fecha_baja
+        indices = {idx["name"] for idx in inspector.get_indexes("miembros")}
+        if "ix_miembros_fecha_baja" not in indices:
+            conn.execute(text("CREATE INDEX ix_miembros_fecha_baja ON miembros (fecha_baja)"))
+            print("Índice 'ix_miembros_fecha_baja' creado")
 
 
 if __name__ == "__main__":

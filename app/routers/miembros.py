@@ -142,14 +142,17 @@ async def listar_miembros(
     categoria: str = "",
     situacion: str = "",
     color: str = "",
+    incluir_bajas: str = "",
 ) -> HTMLResponse:
     """Lista los miembros con su color de morosidad y filtros combinables (T5.2)."""
+    ver_bajas = incluir_bajas in {"1", "on", "true", "si"}
     filas = listar_miembros_con_morosidad(
         db,
         texto=q or None,
         categoria=categoria or None,
         situacion=situacion or None,
         color=color or None,
+        incluir_bajas=ver_bajas,
     )
     return templates.TemplateResponse(
         request=request,
@@ -161,6 +164,7 @@ async def listar_miembros(
                 "categoria": categoria,
                 "situacion": situacion,
                 "color": color,
+                "incluir_bajas": ver_bajas,
             },
             "categorias": CATEGORIAS,
             "situaciones": tuple(ETIQUETAS_SITUACION),
@@ -321,6 +325,7 @@ async def ver_miembro(
             "motivos_exencion": MOTIVOS_EXENCION,
             "categorias": CATEGORIAS,
             "etiquetas_categoria": ETIQUETAS_CATEGORIA,
+            "hoy": date.today().isoformat(),
         },
     )
 
@@ -533,4 +538,61 @@ async def quitar_exencion_miembro(
         return _redirigir(f"/miembros/{miembro.id}")
     servicio_membresias.quitar_exencion(db, miembro)
     flash(request, "ok", "Exención retirada: el miembro vuelve al ciclo de cobro.")
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+# --------------------------------------------------------------------------- #
+# Baja y reactivación (soft-delete)
+# --------------------------------------------------------------------------- #
+
+
+@router.post("/miembros/{miembro_id}/baja", response_model=None)
+async def dar_de_baja_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+    fecha_baja: str = Form(""),
+    motivo_baja: str = Form(""),
+) -> RedirectResponse:
+    """Da de baja al miembro sin borrar la ficha ni su historial (soft-delete)."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    fecha = date.fromisoformat(fecha_baja) if fecha_baja else None
+    try:
+        servicio_membresias.dar_de_baja(
+            db, miembro, fecha=fecha, motivo=motivo_baja
+        )
+    except ValueError as exc:
+        flash(request, "error", str(exc))
+    else:
+        flash(
+            request,
+            "ok",
+            "Miembro dado de baja: deja de aparecer en el panel y no se le "
+            "generarán nuevas cuotas.",
+        )
+    return _redirigir(f"/miembros/{miembro.id}")
+
+
+@router.post("/miembros/{miembro_id}/reactivar", response_model=None)
+async def reactivar_miembro(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    miembro_id: int,
+    csrf_token: str = Form(""),
+) -> RedirectResponse:
+    """Reincorpora al miembro dado de baja al panel y al ciclo de cobro."""
+    miembro = _obtener_miembro(db, miembro_id)
+    if not _csrf_ok(request, csrf_token):
+        return _redirigir(f"/miembros/{miembro.id}")
+    try:
+        servicio_membresias.reactivar_miembro(db, miembro)
+    except ValueError as exc:
+        flash(request, "error", str(exc))
+    else:
+        flash(request, "ok", "Miembro reactivado: vuelve al panel y al ciclo de cobro.")
     return _redirigir(f"/miembros/{miembro.id}")

@@ -120,6 +120,7 @@ def listar_miembros_con_morosidad(
     situacion: str | None = None,
     color: str | None = None,
     referencia: date | None = None,
+    incluir_bajas: bool = False,
 ) -> list[tuple[Miembro, MorosidadInfo]]:
     """Lista miembros con su morosidad calculada, aplicando filtros (T5.2).
 
@@ -127,7 +128,11 @@ def listar_miembros_con_morosidad(
     La deuda negociada aceptada se excluye del color (P-6, T5.22).
     """
     miembros = repo_miembro.listar(
-        db, texto=texto, categoria=categoria, situacion=situacion
+        db,
+        texto=texto,
+        categoria=categoria,
+        situacion=situacion,
+        incluir_bajas=incluir_bajas,
     )
     ids = [miembro.id for miembro in miembros]
     cuotas_por_miembro = repo_membresia.cuotas_por_miembros(

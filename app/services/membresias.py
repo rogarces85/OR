@@ -193,6 +193,45 @@ def quitar_exencion(db: Session, miembro: Miembro) -> Miembro:
     return miembro
 
 
+def dar_de_baja(
+    db: Session,
+    miembro: Miembro,
+    *,
+    fecha: date | None = None,
+    motivo: str = "",
+) -> Miembro:
+    """Da de baja al miembro (soft-delete): deja de aparecer y de cobrarse.
+
+    La baja conserva la ficha y el historial de pagos (nunca se borra una fila).
+    A partir de la baja el miembro no entra al ciclo de cobro
+    (``miembros_facturables``) ni al listado por defecto del panel. Sus cuotas
+    ya generadas no se alteran.
+    """
+    if miembro.fecha_baja is not None:
+        raise ValueError("El miembro ya está dado de baja.")
+    texto = (motivo or "").strip()
+    if len(texto) > 200:
+        raise ValueError("El motivo de la baja no puede superar 200 caracteres.")
+    miembro.fecha_baja = fecha or date.today()
+    miembro.motivo_baja = texto or None
+    db.add(miembro)
+    db.commit()
+    db.refresh(miembro)
+    return miembro
+
+
+def reactivar_miembro(db: Session, miembro: Miembro) -> Miembro:
+    """Reincorpora a un miembro dado de baja, limpiando fecha y motivo (RN-05)."""
+    if miembro.fecha_baja is None:
+        raise ValueError("El miembro no está dado de baja.")
+    miembro.fecha_baja = None
+    miembro.motivo_baja = None
+    db.add(miembro)
+    db.commit()
+    db.refresh(miembro)
+    return miembro
+
+
 def periodo_imputado(fecha_pago: date, anio: int, mes: int) -> tuple[int, int]:
     """Periodo al que se imputa un pago: el siguiente ciclo si es posterior al día 5.
 
