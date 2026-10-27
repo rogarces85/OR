@@ -47,6 +47,8 @@ class Miembro(Base):
     matriculado: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False
     )
+    fecha_baja: Mapped[date | None] = mapped_column(Date, nullable=True)
+    motivo_baja: Mapped[str | None] = mapped_column(String(200), nullable=True)
     categoria: Mapped[str] = mapped_column(
         String(20), nullable=False, default=CATEGORIA_ACTIVO
     )
@@ -79,6 +81,11 @@ class Miembro(Base):
     def esta_exento(self) -> bool:
         """Indica si el miembro está excluido de cobros y avisos (RN-05)."""
         return self.condicion_especial == CONDICION_EXENTO
+
+    @property
+    def esta_activo(self) -> bool:
+        """Indica si el miembro NO tiene fecha de baja (soft-delete)."""
+        return self.fecha_baja is None
 
     def __repr__(self) -> str:
         return f"<Miembro {self.nombre_completo!r}>"

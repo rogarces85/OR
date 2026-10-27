@@ -69,6 +69,12 @@
     <a href="/miembros" class="rounded px-4 py-2 text-sm text-gray-600 hover:text-marca-rojo">
       Limpiar
     </a>
+    <label class="ml-auto flex items-center gap-2 text-sm text-gray-600">
+      <input type="checkbox" name="incluir_bajas" value="1"
+             {% if filtros.incluir_bajas %}checked{% endif %}
+             class="h-4 w-4 rounded border-gray-300 text-marca-rojo focus:ring-marca-rojo">
+      Incluir dados de baja
+    </label>
   </div>
 </form>
 
@@ -92,6 +98,11 @@
             <a href="/miembros/{{ miembro.id }}/editar" class="font-medium hover:text-marca-rojo">
               {{ miembro.nombre_completo }}
             </a>
+            {% if miembro.fecha_baja %}
+              <span class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700">
+                Baja {{ miembro.fecha_baja.strftime("%d/%m/%Y") }}
+              </span>
+            {% endif %}
             <p class="text-xs text-gray-500">{{ miembro.email }}</p>
             <a href="/miembros/{{ miembro.id }}" class="text-xs text-gray-500 hover:text-marca-rojo">
               Ver ficha
