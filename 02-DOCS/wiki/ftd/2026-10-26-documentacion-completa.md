@@ -1,7 +1,7 @@
 ---
 author: Rodrigo Garces
 branch: main
-status: in-progress
+status: done
 type: brief
 title: Documentación completa del proyecto (wiki 02-DOCS)
 description: Bootstrap del wiki 02-DOCS a partir de la documentación oficial del repositorio.
@@ -38,4 +38,4 @@ Construir la documentación completa del agente (wiki `02-DOCS/`) antes del prim
 
 ## Next
 
-Commitear los archivos (autoría del humano, principio 11 de la constitución).
+Commit `a6c1a71` en `main` (documentación completa publicada). Próximo paso natural: mantener la wiki al día con cada cambio de comportamiento.

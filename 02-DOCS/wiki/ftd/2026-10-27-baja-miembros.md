@@ -1,7 +1,7 @@
 ---
 author: Rodrigo Garces
 branch: main
-status: in-progress
+status: done
 type: brief
 title: Baja y reactivación de miembros (soft-delete)
 description: Retiro lógico de miembros con fecha y motivo de baja, sin borrar ficha ni historial.
@@ -39,4 +39,4 @@ Permitir retirar a un miembro del club sin destruir su historia: la ficha y los 
 
 ## Next
 
-Commitear el cambio de código cuando el humano elija la vía (main o rama + PR).
+Fusionado en main vía PR (rama `miembros-baja-softdelete`). Siguiente mejora posible: descontar o negociar la deuda pendiente al dar de baja.
