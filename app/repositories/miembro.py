@@ -26,6 +26,14 @@ def obtener_por_email(db: Session, email: str) -> Miembro | None:
     return db.scalar(select(Miembro).where(Miembro.email == email.strip().lower()))
 
 
+def obtener_por_rut(db: Session, rut: str) -> Miembro | None:
+    """Devuelve un miembro por su RUT."""
+    rut_limpio = (rut or "").strip().replace(".", "").replace("-", "").replace(" ", "").upper()
+    if not rut_limpio:
+        return None
+    return db.scalar(select(Miembro).where(Miembro.rut == rut_limpio))
+
+
 def obtener_por_usuario(db: Session, usuario_id: int) -> Miembro | None:
     """Devuelve el miembro asociado a un usuario (o ``None`` si no hay ficha)."""
     return db.scalar(select(Miembro).where(Miembro.usuario_id == usuario_id))

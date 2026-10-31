@@ -5,10 +5,20 @@
 {% block panel %}
 <div class="flex flex-wrap items-baseline justify-between gap-2">
   <h1 class="text-2xl font-bold">Ingresos y pagos</h1>
-  <a href="/pagos/nuevo"
-     class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
-    Registrar pago
-  </a>
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="/pagos/nuevo"
+       class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+      Registrar pago
+    </a>
+    <a href="/pagos/importar"
+       class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-marca-rojo">
+      Importar pagos
+    </a>
+    <a href="/pagos/exportar"
+       class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+      Exportar a XLSX
+    </a>
+  </div>
 </div>
 <p class="mt-1 text-sm text-gray-500">
   Todos los pagos recibidos. Puedes filtrarlos por tipo de cuota y por estado del

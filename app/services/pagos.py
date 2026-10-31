@@ -7,10 +7,14 @@ automático a la siguiente cuota, RN-18) y T5.16 (listado de ingresos, F-15).
 
 from __future__ import annotations
 
+import csv
+import io
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any
 
+from openpyxl import Workbook
+from openpyxl.styles import Font
 from sqlalchemy.orm import Session
 
 from app.core.periodos import siguiente_periodo
@@ -29,6 +33,7 @@ from app.models.pago import (
     Pago,
 )
 from app.repositories import membresia as repo_membresia
+from app.repositories import miembro as repo_miembro
 from app.repositories import pago as repo_pago
 from app.services import activacion as servicio_activacion
 from app.services import membresias as servicio_membresias
@@ -325,3 +330,202 @@ def obtener_deuda(db: Session, miembro: Miembro) -> list[CuotaMensual]:
 def saldo_a_favor(db: Session, miembro: Miembro) -> int:
     """Saldo a favor (abono) disponible de un miembro."""
     return repo_pago.saldo_a_favor(db, miembro.id)
+
+
+# --------------------------------------------------------------------------- #
+# Exportación a XLSX (T5.17)
+# --------------------------------------------------------------------------- #
+
+
+def exportar_pagos_a_xlsx(
+    db: Session,
+    *,
+    desde: date | None = None,
+    hasta: date | None = None,
+) -> bytes:
+    """Genera un archivo XLSX con los pagos registrados (T5.17).
+
+    Las columnas son: Fecha, Miembro, Email, RUT, Medio, Monto (CLP),
+    Observaciones. Devuelve los bytes del archivo listos para descargar.
+    """
+    filas = repo_pago.listar(db, desde=desde, hasta=hasta)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Pagos"
+
+    encabezados = [
+        "Fecha",
+        "Miembro",
+        "Email",
+        "RUT",
+        "Medio de pago",
+        "Monto (CLP)",
+        "Observaciones",
+    ]
+    ws.append(encabezados)
+    for celda in ws[1]:
+        celda.font = Font(bold=True)
+
+    for pago in filas:
+        miembro = pago.miembro
+        ws.append(
+            [
+                pago.fecha_pago.strftime("%Y-%m-%d"),
+                miembro.nombre_completo if miembro else "",
+                miembro.email if miembro else "",
+                miembro.rut if miembro else "",
+                pago.medio,
+                int(pago.monto_clp),
+                pago.observaciones or "",
+            ]
+        )
+
+    for columna in ws.columns:
+        largo_maximo = 0
+        letra = columna[0].column_letter
+        for celda in columna:
+            valor = celda.value
+            if valor is not None:
+                largo_maximo = max(largo_maximo, len(str(valor)))
+        ws.column_dimensions[letra].width = min(largo_maximo + 2, 40)
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+# --------------------------------------------------------------------------- #
+# Importación masiva de pagos (T5.18)
+# --------------------------------------------------------------------------- #
+
+MEDIOS_VALIDOS = {"transferencia", "efectivo"}
+
+
+@dataclass
+class ResultadoImportacion:
+    """Resultado de una importación masiva de pagos."""
+
+    exitosos: int = 0
+    fallidos: int = 0
+    errores: list[dict] = field(default_factory=list)
+
+
+def importar_pagos_desde_archivo(
+    db: Session,
+    *,
+    archivo: io.BytesIO,
+    nombre_archivo: str,
+    usuario: Any | None = None,
+) -> ResultadoImportacion:
+    """Importa pagos desde un archivo XLSX o CSV (T5.18).
+
+    Cada fila debe tener: identificador (email o RUT del miembro), monto,
+    fecha_pago (AAAA-MM-DD), medio (transferencia/efectivo) y observaciones
+    (opcional).
+
+    Devuelve un resumen con cuántos se importaron y cuántos fallaron, junto
+    con los detalles de cada error.
+    """
+    resultado = ResultadoImportacion()
+    extension = (nombre_archivo or "").lower().split(".")[-1]
+
+    filas: list[dict] = []
+    if extension in {"xlsx"}:
+        filas = _leer_xlsx(archivo)
+    elif extension in {"csv"}:
+        filas = _leer_csv(archivo)
+    else:
+        raise ValueError(
+            "Formato no soportado. Usa un archivo .xlsx o .csv."
+        )
+
+    for indice, fila in enumerate(filas, start=2):
+        numero_fila = indice
+        try:
+            miembro = _buscar_miembro(db, fila.get("identificador", ""))
+            if miembro is None:
+                raise ValueError(
+                    f"No se encontró miembro con email o RUT: {fila.get('identificador', '')}"
+                )
+
+            monto_str = str(fila.get("monto", "")).strip()
+            monto = int(monto_str)
+            if monto <= 0:
+                raise ValueError("El monto debe ser un entero positivo.")
+
+            medio = str(fila.get("medio", "")).strip().lower()
+            if medio not in MEDIOS_VALIDOS:
+                raise ValueError(
+                    f"Medio de pago inválido: {medio}. Usa 'transferencia' o 'efectivo'."
+                )
+
+            fecha_str = str(fila.get("fecha_pago", "")).strip()
+            fecha_pago = date.fromisoformat(fecha_str)
+
+            observaciones = str(fila.get("observaciones", "")).strip() or None
+
+            registrar_pago(
+                db,
+                miembro=miembro,
+                monto_clp=monto,
+                anio=fecha_pago.year,
+                meses=[fecha_pago.month],
+                fecha_pago=fecha_pago,
+                medio=medio,
+                observaciones=observaciones,
+                usuario=usuario,
+            )
+            resultado.exitosos += 1
+
+        except Exception as exc:  # noqa: BLE001 - se captura por fila para reportar errores individuales
+            resultado.fallidos += 1
+            resultado.errores.append(
+                {
+                    "fila": numero_fila,
+                    "identificador": fila.get("identificador", ""),
+                    "error": str(exc),
+                }
+            )
+
+    return resultado
+
+
+def _leer_xlsx(archivo: io.BytesIO) -> list[dict]:
+    """Lee un archivo XLSX y devuelve una lista de diccionarios por fila."""
+    from openpyxl import load_workbook
+
+    wb = load_workbook(archivo, read_only=True, data_only=True)
+    ws = wb.active
+    filas = list(ws.iter_rows(values_only=True))
+    if not filas:
+        return []
+    encabezados = [str(c).strip() if c is not None else "" for c in filas[0]]
+    resultado: list[dict] = []
+    for fila in filas[1:]:
+        if all(c is None for c in fila):
+            continue
+        entrada = {}
+        for i, encabezado in enumerate(encabezados):
+            valor = fila[i] if i < len(fila) else None
+            entrada[encabezado] = valor
+        resultado.append(entrada)
+    return resultado
+
+
+def _leer_csv(archivo: io.BytesIO) -> list[dict]:
+    """Lee un archivo CSV y devuelve una lista de diccionarios por fila."""
+    contenido = archivo.read().decode("utf-8")
+    lector = csv.DictReader(io.StringIO(contenido))
+    return [dict(fila) for fila in lector]
+
+
+def _buscar_miembro(db: Session, identificador: str) -> Miembro | None:
+    """Busca un miembro por email o RUT."""
+    identificador = (identificador or "").strip()
+    if not identificador:
+        return None
+    miembro = repo_miembro.obtener_por_email(db, identificador)
+    if miembro is not None:
+        return miembro
+    return repo_miembro.obtener_por_rut(db, identificador)

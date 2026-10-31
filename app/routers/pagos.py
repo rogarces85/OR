@@ -6,11 +6,21 @@ ingresos con filtros, F-15).
 
 from __future__ import annotations
 
+import io
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import ValidationError
 
 from app.core.formato import formatear_clp
@@ -239,4 +249,90 @@ def _formulario_con_error(
     contexto["mensajes"] = [{"tipo": "error", "texto": mensaje}]
     return templates.TemplateResponse(
         request=request, name="pagos/formulario.html", context=contexto
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Exportación e importación de pagos (T5.17, T5.18)
+# --------------------------------------------------------------------------- #
+
+
+@router.get("/pagos/exportar")
+async def exportar_pagos(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    desde: str = "",
+    hasta: str = "",
+) -> StreamingResponse:
+    """Exporta los pagos a un archivo XLSX (T5.17)."""
+    fecha_desde = _fecha(desde) if desde else None
+    fecha_hasta = _fecha(hasta) if hasta else None
+    datos = servicio_pagos.exportar_pagos_a_xlsx(
+        db, desde=fecha_desde, hasta=fecha_hasta
+    )
+    nombre = "pagos_exportados.xlsx"
+    return StreamingResponse(
+        io.BytesIO(datos),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
+
+
+@router.get("/pagos/importar", response_class=HTMLResponse)
+async def mostrar_importar_pagos(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+) -> HTMLResponse:
+    """Muestra el formulario para importar pagos masivamente (T5.18)."""
+    return templates.TemplateResponse(
+        request=request,
+        name="pagos/importar.html",
+        context={},
+    )
+
+
+@router.post("/pagos/importar", response_class=HTMLResponse)
+async def importar_pagos(
+    request: Request,
+    db: SesionBD,
+    usuario: Annotated[Usuario, Depends(requiere_rol(*ROLES_GESTION))],
+    archivo: UploadFile = File(...),  # noqa: B008
+) -> HTMLResponse:
+    """Importa pagos desde un archivo XLSX o CSV (T5.18)."""
+    nombre_archivo = archivo.filename or ""
+    contenido = await archivo.read()
+    buffer = io.BytesIO(contenido)
+
+    try:
+        resultado = servicio_pagos.importar_pagos_desde_archivo(
+            db,
+            archivo=buffer,
+            nombre_archivo=nombre_archivo,
+            usuario=usuario,
+        )
+    except ValueError as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="pagos/importar.html",
+            context={
+                "mensajes": [{"tipo": "error", "texto": str(exc)}],
+            },
+        )
+
+    partes = [
+        f"Importación completada: {resultado.exitosos} pago(s) importado(s)."
+    ]
+    if resultado.fallidos:
+        partes.append(f"{resultado.fallidos} pago(s) no se pudieron importar.")
+    flash(request, "ok", " ".join(partes))
+
+    return templates.TemplateResponse(
+        request=request,
+        name="pagos/importar.html",
+        context={
+            "resultado": resultado,
+            "mensajes": [{"tipo": "ok", "texto": " ".join(partes)}],
+        },
     )
