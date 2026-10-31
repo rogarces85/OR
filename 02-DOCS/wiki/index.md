@@ -52,6 +52,7 @@ Documentos de característica de cada cambio autorizado (uno por feature).
 | [Modales de edición completa de miembros](ftd/2026-10-31-modales-edicion-miembros.md) | Botón "Editar todos los datos" en listado y ficha; modal con todos los campos. | 2026-10-31 | -4.0 |
 | [Mejoras visuales del módulo Miembros](ftd/2026-10-31-mejoras-visuales-miembros.md) | Listado con badges, ficha en cards, modal con validación en tiempo real. | 2026-10-31 | -4.0 |
 | [Ajustes visuales de listado Miembros](ftd/2026-10-31-ajustes-visuales-listado-miembros.md) | Botones de acciones visibles y textos de categoría simplificados. | 2026-10-31 | -4.0 |
+| [Exportación e importación masiva de pagos](ftd/2026-10-31-pagos-exportacion-importacion.md) | Exportar pagos a XLSX y cargar múltiples pagos desde archivo XLSX o CSV. | 2026-10-31 | -4.0 |
 
 ## harness
 
