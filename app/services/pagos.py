@@ -411,6 +411,16 @@ class ResultadoImportacion:
     errores: list[dict] = field(default_factory=list)
 
 
+def _obtener_campo(fila: dict, nombres: tuple[str, ...]) -> str:
+    """Obtiene el valor de una fila probando varios nombres de columna."""
+    for nombre in nombres:
+        if nombre in fila and fila[nombre] is not None:
+            valor = str(fila[nombre]).strip()
+            if valor:
+                return valor
+    return ""
+
+
 def importar_pagos_desde_archivo(
     db: Session,
     *,
@@ -419,6 +429,15 @@ def importar_pagos_desde_archivo(
     usuario: Any | None = None,
 ) -> ResultadoImportacion:
     """Importa pagos desde un archivo XLSX o CSV (T5.18).
+
+    Acepta dos formatos de columnas:
+
+    Formato de importación:
+      identificador, monto, fecha_pago, medio, observaciones
+
+    Formato de exportación:
+      identificador (o rut o email), monto, fecha_pago, medio, observaciones,
+      miembro (informativo), email (informativo)
 
     Cada fila debe tener: identificador (email o RUT del miembro), monto,
     fecha_pago (AAAA-MM-DD), medio (transferencia/efectivo) y observaciones
@@ -443,27 +462,41 @@ def importar_pagos_desde_archivo(
     for indice, fila in enumerate(filas, start=2):
         numero_fila = indice
         try:
-            miembro = _buscar_miembro(db, fila.get("identificador", ""))
+            # Aceptar identificador, rut o email como identificador del miembro
+            identificador = _obtener_campo(
+                fila,
+                ("identificador", "rut", "email", "RUT", "Email"),
+            )
+            miembro = _buscar_miembro(db, identificador)
             if miembro is None:
                 raise ValueError(
-                    f"No se encontró miembro con email o RUT: {fila.get('identificador', '')}"
+                    f"No se encontró miembro con email o RUT: {identificador}"
                 )
 
-            monto_str = str(fila.get("monto", "")).strip()
+            monto_str = _obtener_campo(
+                fila, ("monto", "Monto (CLP)")
+            )
             monto = int(monto_str)
             if monto <= 0:
                 raise ValueError("El monto debe ser un entero positivo.")
 
-            medio = str(fila.get("medio", "")).strip().lower()
+            medio = _obtener_campo(
+                fila, ("medio", "Medio de pago")
+            ).lower()
             if medio not in MEDIOS_VALIDOS:
                 raise ValueError(
-                    f"Medio de pago inválido: {medio}. Usa 'transferencia' o 'efectivo'."
+                    f"Medio de pago inválido: {medio}. "
+                    "Usa 'transferencia' o 'efectivo'."
                 )
 
-            fecha_str = str(fila.get("fecha_pago", "")).strip()
+            fecha_str = _obtener_campo(
+                fila, ("fecha_pago", "fecha", "Fecha")
+            )
             fecha_pago = date.fromisoformat(fecha_str)
 
-            observaciones = str(fila.get("observaciones", "")).strip() or None
+            observaciones = _obtener_campo(
+                fila, ("observaciones", "observacion", "Observaciones")
+            ) or None
 
             registrar_pago(
                 db,
@@ -483,7 +516,9 @@ def importar_pagos_desde_archivo(
             resultado.errores.append(
                 {
                     "fila": numero_fila,
-                    "identificador": fila.get("identificador", ""),
+                    "identificador": _obtener_campo(
+                        fila, ("identificador", "rut", "email")
+                    ),
                     "error": str(exc),
                 }
             )
