@@ -139,7 +139,7 @@ def test_importar_pagos_desde_csv(cliente, usuario_factory, db, miembro_factory)
     from app.services import membresias as servicio_membresias
 
     _sesion_admin(cliente, usuario_factory)
-    miembro = _crear_miembro_servicio(db, servicio_membresias, "csv@example.com", "Para CSV")
+    _crear_miembro_servicio(db, servicio_membresias, "csv@example.com", "Para CSV")
 
     contenido_csv = (
         "identificador,monto,fecha_pago,medio,observaciones\n"
@@ -163,11 +163,6 @@ def test_importar_pagos_desde_csv(cliente, usuario_factory, db, miembro_factory)
 def test_importar_pagos_miembro_no_existente(cliente, usuario_factory, db):
     """La importación falla si el miembro no existe."""
     _sesion_admin(cliente, usuario_factory)
-
-    contenido_xlsx = (
-        "identificador,monto,fecha_pago,medio,observaciones\n"
-        "noexiste@example.com,10000,2026-10-22,transferencia,Pago\n"
-    )
 
     # Crear XLSX simple
     from openpyxl import Workbook
