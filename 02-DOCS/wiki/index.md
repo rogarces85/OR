@@ -51,6 +51,7 @@ Documentos de característica de cada cambio autorizado (uno por feature).
 | [Baja y reactivación de miembros (soft-delete)](ftd/2026-10-27-baja-miembros.md) | Retiro lógico con fecha/motivo, fuera del panel y del cobro, reversible. | 2026-10-27 | -4.0 |
 | [Modales de edición completa de miembros](ftd/2026-10-31-modales-edicion-miembros.md) | Botón "Editar todos los datos" en listado y ficha; modal con todos los campos. | 2026-10-31 | -4.0 |
 | [Mejoras visuales del módulo Miembros](ftd/2026-10-31-mejoras-visuales-miembros.md) | Listado con badges, ficha en cards, modal con validación en tiempo real. | 2026-10-31 | -4.0 |
+| [Ajustes visuales de listado Miembros](ftd/2026-10-31-ajustes-visuales-listado-miembros.md) | Botones de acciones visibles y textos de categoría simplificados. | 2026-10-31 | -4.0 |
 
 ## harness
 

@@ -98,9 +98,7 @@
         {% set estado_activo = miembro.situacion_activacion == "activo" %}
         {% set estado_exento = miembro.esta_exento %}
         {% set estado_baja = miembro.fecha_baja is not none %}
-        <tr class="hover:bg-gray-50 transition-colors cursor-pointer group"
-            onclick="location.href='/miembros/{{ miembro.id }}'"
-            style="touch-action: manipulation;">
+        <tr class="hover:bg-gray-50 transition-colors group">
           <td class="px-4 py-3">
             <div class="flex items-center gap-2">
               <a href="/miembros/{{ miembro.id }}/editar"
@@ -122,7 +120,7 @@
                    {% else %}
                      bg-amber-50 text-amber-700 border border-amber-100
                    {% endif %}">
-              {{ "Activo (alumno)" if miembro.categoria == "activo" else "Membresía (apoyo)" }}
+              {{ "Activo" if miembro.categoria == "activo" else "Membresía" }}
             </span>
           </td>
           <td class="px-4 py-3">
