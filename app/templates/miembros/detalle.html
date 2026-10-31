@@ -1,5 +1,6 @@
 {% extends "panel/base_panel.html" %}
 {% import "parciales/macros.html" as m %}
+{% from "miembros/_campos.html" import campo, campo_check %}
 
 {% block titulo %}{{ miembro.nombre_completo }} · {{ app_name }}{% endblock %}
 
@@ -13,6 +14,11 @@
        class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
       Editar ficha
     </a>
+    <button type="button"
+            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800"
+            onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.remove('hidden')">
+      Editar todos los datos
+    </button>
     <a href="/miembros/{{ miembro.id }}/pagos/nuevo"
        class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
       Registrar pago
@@ -389,4 +395,7 @@
   La Matrícula es un cargo único de incorporación y no cuenta para la morosidad,
   que solo considera las cuotas mensuales (F-11).
 </p>
+
+{# Modal de edición completa del miembro. #}
+{% include "miembros/modal_editar.html" %}
 {% endblock %}

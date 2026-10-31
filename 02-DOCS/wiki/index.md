@@ -49,6 +49,7 @@ Documentos de característica de cada cambio autorizado (uno por feature).
 |---------|---------|---------|-------|
 | [Documentación completa del proyecto](ftd/2026-10-26-documentacion-completa.md) | Bootstrap de la wiki 02-DOCS desde la documentación oficial. | 2026-10-26 | -4.0 |
 | [Baja y reactivación de miembros (soft-delete)](ftd/2026-10-27-baja-miembros.md) | Retiro lógico con fecha/motivo, fuera del panel y del cobro, reversible. | 2026-10-27 | -4.0 |
+| [Modales de edición completa de miembros](ftd/2026-10-31-modales-edicion-miembros.md) | Botón "Editar todos los datos" en listado y ficha; modal con todos los campos. | 2026-10-31 | -4.0 |
 
 ## harness
 
