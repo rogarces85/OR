@@ -29,32 +29,65 @@
     <form id="form-editar-{{ miembro.id }}"
           method="post"
           action="/miembros/{{ miembro.id }}/editar"
-          class="mt-4 grid gap-3 sm:grid-cols-2"
+          class="mt-4 space-y-6"
           onsubmit="return guardarEdicionMiembro(event, '{{ miembro.id }}')">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="modal" value="1">
 
-      {{ campo("nombre_completo", "Nombre completo", {}, miembro.nombre_completo, "text", "Ana Saldívar") }}
-      {{ campo("email", "Correo electrónico", {}, miembro.email, "email", "ana@example.com") }}
-      {{ campo("telefono", "Teléfono", {}, miembro.telefono or "", "tel", "+56 9 1234 5678") }}
-      {{ campo("rut", "RUT", {}, miembro.rut or "", "text", "12.345.678-9") }}
-      {{ campo("fecha_nacimiento", "Fecha de nacimiento", {},
-               miembro.fecha_nacimiento.strftime("%Y-%m-%d") if miembro.fecha_nacimiento else "", "date") }}
-      {{ campo("fecha_incorporacion", "Fecha de ingreso", {},
-               miembro.fecha_incorporacion.strftime("%Y-%m-%d") if miembro.fecha_incorporacion else "", "date") }}
-      {{ campo("direccion", "Dirección", {}, miembro.direccion or "", "text", "Calle 123, Osorno") }}
-      {{ campo("contacto_emergencia", "Contacto de emergencia", {},
-               miembro.contacto_emergencia or "", "text", "Nombre y teléfono") }}
+      <!-- Datos personales -->
+      <fieldset class="border border-gray-200 rounded-lg p-4">
+        <legend class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Datos personales</legend>
+        <div class="grid gap-3 sm:grid-cols-2 mt-3">
+          {{ campo("nombre_completo", "Nombre completo", {}, miembro.nombre_completo, "text", "Ana Saldívar") }}
+          {{ campo("email", "Correo electrónico", {}, miembro.email, "email", "ana@example.com") }}
+          {{ campo("telefono", "Teléfono", {}, miembro.telefono or "", "tel", "+56 9 1234 5678") }}
+          {{ campo("rut", "RUT", {}, miembro.rut or "", "text", "12.345.678-9") }}
+        </div>
+      </fieldset>
 
-      {{ campo_categoria(categorias, miembro.categoria) }}
+      <!-- Fechas -->
+      <fieldset class="border border-gray-200 rounded-lg p-4">
+        <legend class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fechas</legend>
+        <div class="grid gap-3 sm:grid-cols-2 mt-3">
+          {{ campo("fecha_nacimiento", "Fecha de nacimiento", {},
+                   miembro.fecha_nacimiento.strftime("%Y-%m-%d") if miembro.fecha_nacimiento else "", "date") }}
+          {{ campo("fecha_incorporacion", "Fecha de ingreso", {},
+                   miembro.fecha_incorporacion.strftime("%Y-%m-%d") if miembro.fecha_incorporacion else "", "date") }}
+        </div>
+      </fieldset>
 
-      <div class="sm:col-span-2 mt-2 flex items-center gap-3">
-        {{ campo_check("matriculado", "Ya está matriculado", miembro.matriculado,
-                       "Marca para no generar el cobro de matrícula.", "") }}
+      <!-- Contacto -->
+      <fieldset class="border border-gray-200 rounded-lg p-4">
+        <legend class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contacto</legend>
+        <div class="grid gap-3 sm:grid-cols-2 mt-3">
+          {{ campo("direccion", "Dirección", {}, miembro.direccion or "", "text", "Calle 123, Osorno") }}
+          {{ campo("contacto_emergencia", "Contacto de emergencia", {},
+                   miembro.contacto_emergencia or "", "text", "Nombre y teléfono") }}
+        </div>
+      </fieldset>
+
+      <!-- Estado -->
+      <fieldset class="border border-gray-200 rounded-lg p-4">
+        <legend class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</legend>
+        <div class="grid gap-3 sm:grid-cols-2 mt-3">
+          {{ campo_categoria(categorias, miembro.categoria) }}
+          {{ campo_check("matriculado", "Ya está matriculado", miembro.matriculado,
+                         "Marca para no generar el cobro de matrícula.", "") }}
+        </div>
+      </fieldset>
+
+      <div class="flex items-center gap-3">
         <button type="submit"
                 id="btn-guardar-{{ miembro.id }}"
-                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
-          Guardar cambios
+                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700 flex items-center gap-2">
+          <span id="btn-guardar-texto-{{ miembro.id }}">Guardar cambios</span>
+          <span id="btn-guardar-spinner-{{ miembro.id }}" class="hidden flex items-center gap-1">
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Guardando…
+          </span>
         </button>
         <button type="button"
                 class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -67,54 +100,63 @@
 </div>
 
 <script>
+  // Control de cambios sin guardar
+  var formularioEditado_{{ miembro.id }} = false;
+
   function cerrarModalEdicion(id) {
+    var form = document.getElementById('form-editar-' + id);
+    if (form && window['formularioEditado_' + id]) {
+      if (!confirm('Tienes cambios sin guardar. ¿Seguro que deseas cerrar?')) {
+        return;
+      }
+    }
     document.getElementById('modal-editar-' + id).classList.add('hidden');
     limpiarErroresModal(id);
   }
 
   function limpiarErroresModal(id) {
-    const contenedor = document.getElementById('errores-modal-' + id);
+    var contenedor = document.getElementById('errores-modal-' + id);
     if (contenedor) {
       contenedor.classList.add('hidden');
       contenedor.textContent = '';
     }
-    // quitar estilos de error de los campos
-    const form = document.getElementById('form-editar-' + id);
+    var form = document.getElementById('form-editar-' + id);
     if (!form) return;
-    form.querySelectorAll('.border-morosidad-rojo').forEach(el => {
+    form.querySelectorAll('.border-morosidad-rojo').forEach(function (el) {
       el.classList.remove('border-morosidad-rojo');
       el.classList.add('border-gray-300');
     });
-    form.querySelectorAll('p.mt-1.text-xs.text-red-700').forEach(el => el.remove());
+    form.querySelectorAll('p.mt-1.text-xs.text-red-700').forEach(function (el) { el.remove(); });
+    window['formularioEditado_' + id] = false;
   }
 
   function mostrarErroresModal(id, errores) {
     limpiarErroresModal(id);
-    const contenedor = document.getElementById('errores-modal-' + id);
-    const form = document.getElementById('form-editar-' + id);
+    var contenedor = document.getElementById('errores-modal-' + id);
+    var form = document.getElementById('form-editar-' + id);
     if (!form || !contenedor) return;
 
-    // errores de campo
-    for (const [campo, mensaje] of Object.entries(errores)) {
-      const input = form.querySelector('[name="' + campo + '"]');
-      if (input) {
-        input.classList.remove('border-gray-300');
-        input.classList.add('border-morosidad-rojo');
-        const aviso = document.createElement('p');
-        aviso.className = 'mt-1 text-xs text-red-700';
-        aviso.textContent = mensaje;
-        input.parentElement.appendChild(aviso);
+    for (var campo in errores) {
+      if (errores.hasOwnProperty(campo)) {
+        var input = form.querySelector('[name="' + campo + '"]');
+        if (input) {
+          input.classList.remove('border-gray-300');
+          input.classList.add('border-morosidad-rojo');
+          var aviso = document.createElement('p');
+          aviso.className = 'mt-1 text-xs text-red-700';
+          aviso.textContent = errores[campo];
+          input.parentElement.appendChild(aviso);
+        }
       }
     }
 
-    // errores generales (csrf, etc.)
-    const generales = {};
-    for (const [campo, mensaje] of Object.entries(errores)) {
-      if (!form.querySelector('[name="' + campo + '"]')) {
-        generales[campo] = mensaje;
+    var generales = {};
+    for (var campo in errores) {
+      if (errores.hasOwnProperty(campo) && !form.querySelector('[name="' + campo + '"]')) {
+        generales[campo] = errores[campo];
       }
     }
-    const mensajesGenerales = Object.values(generales);
+    var mensajesGenerales = Object.values(generales);
     if (mensajesGenerales.length > 0) {
       contenedor.classList.remove('hidden');
       contenedor.textContent = mensajesGenerales.join(' ');
@@ -123,36 +165,38 @@
 
   async function guardarEdicionMiembro(event, id) {
     event.preventDefault();
-    const btn = document.getElementById('btn-guardar-' + id);
-    const form = document.getElementById('form-editar-' + id);
+    var btn = document.getElementById('btn-guardar-' + id);
+    var btnTexto = document.getElementById('btn-guardar-texto-' + id);
+    var btnSpinner = document.getElementById('btn-guardar-spinner-' + id);
+    var form = document.getElementById('form-editar-' + id);
     limpiarErroresModal(id);
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = 'Guardando…';
     }
+    if (btnTexto) btnTexto.classList.add('hidden');
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
 
     try {
-      const respuesta = await fetch(form.action, {
+      var respuesta = await fetch(form.action, {
         method: 'POST',
         body: new FormData(form),
       });
-      const datos = await respuesta.json();
+      var datos = await respuesta.json();
 
       if (respuesta.ok && datos.ok) {
-        // éxito: recargar para ver los cambios y los flashes
         window.location.reload();
       } else if (respuesta.status === 422 && datos.errores) {
         mostrarErroresModal(id, datos.errores);
       } else {
-        contenedor = document.getElementById('errores-modal-' + id);
+        var contenedor = document.getElementById('errores-modal-' + id);
         if (contenedor) {
           contenedor.classList.remove('hidden');
           contenedor.textContent = 'No se pudieron guardar los cambios. Inténtalo nuevamente.';
         }
       }
     } catch (e) {
-      const contenedor = document.getElementById('errores-modal-' + id);
+      var contenedor = document.getElementById('errores-modal-' + id);
       if (contenedor) {
         contenedor.classList.remove('hidden');
         contenedor.textContent = 'Error de conexión. Inténtalo nuevamente.';
@@ -160,10 +204,29 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = 'Guardar cambios';
       }
+      if (btnTexto) btnTexto.classList.remove('hidden');
+      if (btnSpinner) btnSpinner.classList.add('hidden');
     }
 
     return false;
   }
+
+  // Validación en tiempo real: marcar campo como editado al hacer blur
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('form-editar-{{ miembro.id }}');
+    if (!form) return;
+    form.querySelectorAll('input, select').forEach(function (input) {
+      input.addEventListener('blur', function () {
+        window['formularioEditado_{{ miembro.id }}'] = true;
+        // quitar estilo de error si el usuario empieza a escribir
+        input.addEventListener('input', function () {
+          input.classList.remove('border-morosidad-rojo');
+          input.classList.add('border-gray-300');
+          var aviso = input.parentElement.querySelector('p.mt-1.text-xs.text-red-700');
+          if (aviso) aviso.remove();
+        }, { once: true });
+      }, { once: true });
+    });
+  });
 </script>
