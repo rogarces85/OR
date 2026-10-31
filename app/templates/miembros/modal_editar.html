@@ -1,0 +1,73 @@
+{# Modal de edición completa del miembro (todos los datos). #}
+{# Se incluye en la lista y en la ficha; se abre con un botón y cierra al guardar. #}
+{% from "miembros/_campos.html" import campo, campo_check, campo_categoria %}
+<div id="modal-editar-{{ miembro.id }}" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-editar-titulo-{{ miembro.id }}">
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+       onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')"></div>
+
+  <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl border border-gray-200 p-6 flex flex-col gap-4">
+    <div class="flex items-baseline justify-between gap-2">
+      <h2 id="modal-editar-titulo-{{ miembro.id }}" class="text-lg font-bold">Editar — {{ miembro.nombre_completo }}</h2>
+      <button type="button"
+              class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+              onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')">
+        <span class="sr-only">Cerrar</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <p class="mt-1 text-sm text-gray-500">
+      Todos los campos son obligatorios. La fecha de ingreso es la fecha real de incorporación al club.
+    </p>
+
+    <form id="form-editar-{{ miembro.id }}"
+          method="post"
+          action="/miembros/{{ miembro.id }}/editar"
+          class="mt-4 grid gap-3 sm:grid-cols-2"
+          onsubmit="return confirmarEdicionMiembro('{{ miembro.id }}')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="miembro_id" value="{{ miembro.id }}">
+
+      {{ campo("nombre_completo", "Nombre completo", {}, miembro.nombre_completo, "text", "Ana Saldívar") }}
+      {{ campo("email", "Correo electrónico", {}, miembro.email, "email", "ana@example.com") }}
+      {{ campo("telefono", "Teléfono", {}, miembro.telefono or "", "tel", "+56 9 1234 5678") }}
+      {{ campo("rut", "RUT", {}, miembro.rut or "", "text", "12.345.678-9") }}
+      {{ campo("fecha_nacimiento", "Fecha de nacimiento", {},
+               miembro.fecha_nacimiento.strftime("%Y-%m-%d") if miembro.fecha_nacimiento else "", "date") }}
+      {{ campo("fecha_incorporacion", "Fecha de ingreso", {},
+               miembro.fecha_incorporacion.strftime("%Y-%m-%d") if miembro.fecha_incorporacion else "", "date") }}
+      {{ campo("direccion", "Dirección", {}, miembro.direccion or "", "text", "Calle 123, Osorno") }}
+      {{ campo("contacto_emergencia", "Contacto de emergencia", {},
+               miembro.contacto_emergencia or "", "text", "Nombre y teléfono") }}
+
+      {{ campo_categoria(categorias, miembro.categoria) }}
+
+      <div class="sm:col-span-2 mt-2 flex items-center gap-3">
+        {{ campo_check("matriculado", "Ya está matriculado", miembro.matriculado,
+                       "Marca para no generar el cobro de matrícula.", "") }}
+        <button type="submit"
+                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+          Guardar cambios
+        </button>
+        <button type="button"
+                class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function confirmarEdicionMiembro(id) {
+    const btn = document.querySelector('#form-editar-' + id + ' button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Guardando…';
+    }
+    return true;
+  }
+</script>

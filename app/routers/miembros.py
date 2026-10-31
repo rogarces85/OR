@@ -373,9 +373,15 @@ async def editar_miembro(
     direccion: str = Form(""),
     contacto_emergencia: str = Form(""),
     matriculado: bool = Form(False),
+    categoria: str = Form(CATEGORIA_ACTIVO),
 ) -> HTMLResponse | RedirectResponse:
-    """Modifica la ficha del miembro sin alterar su historial (T5.3)."""
+    """Modifica la ficha del miembro sin alterar su historial (T5.3).
+
+    Acepta la categoría para editar todos los datos desde el modal.
+    """
     miembro = _obtener_miembro(db, miembro_id)
+    if categoria not in CATEGORIAS:
+        categoria = miembro.categoria
     datos = _datos_ficha(
         nombre_completo=nombre_completo,
         email=email,
@@ -409,7 +415,7 @@ async def editar_miembro(
                 "datos": datos,
                 "errores": errores,
                 "categorias": CATEGORIAS,
-                "categoria": miembro.categoria,
+                "categoria": categoria,
                 "edicion": True,
                 "matriculado": matriculado,
                 "cancelar_url": f"/miembros/{miembro.id}",
@@ -437,6 +443,8 @@ async def editar_miembro(
         direccion=entrada.direccion,
         contacto_emergencia=entrada.contacto_emergencia,
     )
+    if categoria != miembro.categoria:
+        servicio_membresias.cambiar_categoria(db, miembro, categoria, usuario)
     flash(request, "ok", "Datos del miembro actualizados.")
     return _redirigir(f"/miembros/{miembro.id}")
 

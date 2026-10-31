@@ -1,5 +1,6 @@
 {% extends "panel/base_panel.html" %}
 {% import "parciales/macros.html" as m %}
+{% from "miembros/_campos.html" import campo, campo_check %}
 
 {% block titulo %}Miembros · {{ app_name }}{% endblock %}
 
@@ -104,9 +105,16 @@
               </span>
             {% endif %}
             <p class="text-xs text-gray-500">{{ miembro.email }}</p>
-            <a href="/miembros/{{ miembro.id }}" class="text-xs text-gray-500 hover:text-marca-rojo">
-              Ver ficha
-            </a>
+            <div class="mt-1 flex gap-1.5">
+              <button type="button"
+                      class="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-marca-rojo"
+                      onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.remove('hidden')">
+                Editar
+              </button>
+              <a href="/miembros/{{ miembro.id }}" class="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-marca-rojo">
+                Ver ficha
+              </a>
+            </div>
           </td>
           <td class="px-4 py-3">
             {{ "Activo" if miembro.categoria == "activo" else "Membresía" }}
@@ -150,4 +158,9 @@
     </tbody>
   </table>
 </div>
+
+{# Modales de edición de cada miembro (cargados con la página). #}
+{% for miembro, info in filas %}
+  {% include "miembros/modal_editar.html" %}
+{% endfor %}
 {% endblock %}
