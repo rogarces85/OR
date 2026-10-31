@@ -5,47 +5,54 @@
 {% block titulo %}{{ miembro.nombre_completo }} · {{ app_name }}{% endblock %}
 
 {% block panel %}
-<div class="flex flex-wrap items-baseline justify-between gap-2">
-  <h1 class="text-2xl font-bold">{{ miembro.nombre_completo }}</h1>
-  <div class="flex flex-wrap items-center gap-3">
+{# Encabezado con acciones principales y tarjeta de resumen. #}
+<div class="flex flex-wrap items-baseline justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">{{ miembro.nombre_completo }}</h1>
+    <p class="mt-1 text-sm text-gray-500">{{ miembro.email }}</p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
     <a href="/reportes/informe/{{ miembro.id }}"
-       class="text-sm text-gray-600 hover:text-marca-rojo">Informe calendario</a>
-    <a href="/miembros/{{ miembro.id }}/editar"
-       class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
-      Editar ficha
-    </a>
+       class="text-xs text-gray-600 hover:text-marca-rojo whitespace-nowrap">Informe calendario</a>
     <button type="button"
-            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800"
+            class="rounded bg-marca-negro px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-gray-800 whitespace-nowrap"
             onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.remove('hidden')">
       Editar todos los datos
     </button>
     <a href="/miembros/{{ miembro.id }}/pagos/nuevo"
-       class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+       class="rounded bg-marca-rojo px-3 py-1.5 text-xs font-medium text-marca-blanco hover:bg-red-700 whitespace-nowrap">
       Registrar pago
     </a>
-    <a href="/miembros" class="text-sm text-gray-600 hover:text-marca-rojo">← Volver al listado</a>
+    <a href="/miembros" class="text-xs text-gray-600 hover:text-marca-rojo whitespace-nowrap">← Volver al listado</a>
   </div>
 </div>
 
-{# Resumen de la ficha y del estado del miembro. #}
+{# Tarjeta de resumen del miembro. #}
 <div class="mt-6 rounded-lg border border-gray-200 bg-white p-6">
   <div class="flex flex-wrap items-start justify-between gap-4">
-    <div>
-      <p class="text-sm text-gray-500">{{ miembro.email }}</p>
-      <p class="mt-1 text-sm text-gray-500">
-        Fecha de ingreso: {{ miembro.fecha_incorporacion.strftime("%d/%m/%Y") }}
-      </p>
+    <div class="min-w-0 flex-1">
+      <p class="text-xs text-gray-500 uppercase tracking-wider">Fecha de ingreso</p>
+      <p class="text-sm font-medium text-gray-900">{{ miembro.fecha_incorporacion.strftime("%d/%m/%Y") }}</p>
     </div>
     <div class="flex flex-wrap items-center gap-2 text-xs">
-      <span class="rounded-full bg-gray-100 px-2.5 py-0.5 font-medium">
-        {{ etiquetas_categoria.get(miembro.categoria, miembro.categoria) }}
+      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+             {% if miembro.categoria == "activo" %}
+               bg-green-50 text-green-700 border border-green-100
+             {% else %}
+               bg-amber-50 text-amber-700 border border-amber-100
+             {% endif %}">
+        {{ "Activo (alumno)" if miembro.categoria == "activo" else "Membresía (apoyo)" }}
       </span>
       {% if miembro.situacion_activacion == "activo" %}
-        <span class="rounded-full bg-morosidad-verde/15 px-2.5 py-0.5 font-medium text-green-700">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-green-50 text-green-700 border border-green-100">
+          <span class="h-2 w-2 rounded-full bg-green-400"></span>
           Membresía activa
         </span>
       {% else %}
-        <span class="rounded-full bg-morosidad-naranjo/15 px-2.5 py-0.5 font-medium text-amber-700">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-amber-50 text-amber-700 border border-amber-100">
+          <span class="h-2 w-2 rounded-full bg-amber-400"></span>
           Pendiente de activación
         </span>
       {% endif %}
@@ -53,14 +60,29 @@
         {{ m.etiqueta_exento() }}
       {% endif %}
       {% if miembro.fecha_baja %}
-        <span class="rounded-full bg-gray-200 px-2.5 py-0.5 font-medium text-gray-700">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-gray-100 text-gray-600 border border-gray-200">
+          <span class="h-2 w-2 rounded-full bg-gray-400"></span>
           Dado de baja el {{ miembro.fecha_baja.strftime("%d/%m/%Y") }}
+        </span>
+      {% endif %}
+      {% if miembro.matriculado %}
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-green-50 text-green-700 border border-green-100">
+          <span class="h-2 w-2 rounded-full bg-green-400"></span>
+          Matriculado
+        </span>
+      {% else %}
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-amber-50 text-amber-700 border border-amber-100">
+          <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+          Sin matrícula
         </span>
       {% endif %}
     </div>
   </div>
 
-  <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+  <dl class="mt-6 grid gap-3 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3">
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Morosidad</dt>
       <dd class="mt-1">
@@ -73,40 +95,37 @@
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Deuda acumulada</dt>
-      <dd class="mt-1 font-medium tabular-nums">$ {{ informacion.monto_deuda_clp | clp }}</dd>
+      <dd class="mt-1 font-medium tabular-nums text-gray-900">$ {{ informacion.monto_deuda_clp | clp }}</dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Saldo a favor</dt>
-      <dd class="mt-1 font-medium tabular-nums">$ {{ saldo_a_favor | clp }}</dd>
+      <dd class="mt-1 font-medium tabular-nums text-gray-900">$ {{ saldo_a_favor | clp }}</dd>
     </div>
-  </dl>
-
-  <dl class="mt-6 grid gap-3 border-t border-gray-100 pt-4 text-sm sm:grid-cols-3">
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Teléfono</dt>
-      <dd>{{ miembro.telefono or "—" }}</dd>
+      <dd class="mt-1 text-gray-700">{{ miembro.telefono or "—" }}</dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">RUT</dt>
-      <dd>{{ miembro.rut or "—" }}</dd>
+      <dd class="mt-1 text-gray-700">{{ miembro.rut or "—" }}</dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Fecha de nacimiento</dt>
-      <dd>
+      <dd class="mt-1 text-gray-700">
         {{ miembro.fecha_nacimiento.strftime("%d/%m/%Y") if miembro.fecha_nacimiento else "—" }}
       </dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Dirección</dt>
-      <dd>{{ miembro.direccion or "—" }}</dd>
+      <dd class="mt-1 text-gray-700">{{ miembro.direccion or "—" }}</dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Contacto de emergencia</dt>
-      <dd>{{ miembro.contacto_emergencia or "—" }}</dd>
+      <dd class="mt-1 text-gray-700">{{ miembro.contacto_emergencia or "—" }}</dd>
     </div>
     <div>
       <dt class="text-xs uppercase tracking-wide text-gray-500">Condición</dt>
-      <dd>
+      <dd class="mt-1 text-gray-700">
         {% if miembro.esta_exento %}
           Exento · {{ miembro.motivo_exencion }}
         {% else %}
@@ -114,284 +133,319 @@
         {% endif %}
       </dd>
     </div>
-    <div>
-      <dt class="text-xs uppercase tracking-wide text-gray-500">Matrícula</dt>
-      <dd>
-        {% if miembro.matriculado %}
-          <span class="font-medium text-green-700">Matriculado</span>
-        {% else %}
-          <span class="font-medium text-amber-700">Sin matrícula</span>
-        {% endif %}
-      </dd>
-    </div>
   </dl>
 </div>
 
 {# Obligación inicial y activación (F-07, RN-02, CA-01). #}
-<h2 class="mt-8 text-lg font-semibold">Activación de la membresía</h2>
-{% if miembro.situacion_activacion == "activo" %}
-  <div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
-    <p class="text-sm text-gray-500">
-      El miembro ya está <strong>Activo</strong> y no tiene una obligación inicial
-      pendiente.
-    </p>
-    {% if miembro.matriculado %}
-      <p class="mt-2 text-sm text-gray-500">
-        Está marcado como <strong>matriculado</strong>: no corresponde cobrar la
-        Matrícula. La cuota de su categoría se rige por el ciclo mensual.
-      </p>
-    {% endif %}
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Activación de la membresía</h2>
   </div>
-{% else %}
-  <div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
-    <p class="text-sm text-gray-500">
-      {% if miembro.matriculado %}
-        Este miembro está <strong>matriculado</strong>: no corresponde cobrar la
-        Matrícula. La cuota de su categoría se rige por el ciclo mensual.
-      {% else %}
-        El miembro pasa a <strong>Activo</strong> solo al completar el pago inicial:
-        Matrícula + la cuota de su categoría elegida (RN-02).
-      {% endif %}
-    </p>
-
-    <div class="mt-4 overflow-x-auto rounded border border-gray-200">
-      <table class="min-w-full divide-y divide-gray-200 text-sm">
-        <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-          <tr>
-            <th scope="col" class="px-4 py-3">Concepto</th>
-            <th scope="col" class="px-4 py-3 text-right">Requerido</th>
-            <th scope="col" class="px-4 py-3 text-right">Pagado</th>
-            <th scope="col" class="px-4 py-3 text-right">Saldo</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          {% for concepto in estado_activacion.conceptos %}
-            <tr>
-              <td class="px-4 py-3">{{ concepto.etiqueta }}</td>
-              <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.requerido_clp | clp }}</td>
-              <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.pagado_clp | clp }}</td>
-              <td class="px-4 py-3 text-right tabular-nums">$ {{ concepto.saldo_clp | clp }}</td>
-            </tr>
-          {% endfor %}
-          <tr class="bg-gray-50 font-medium">
-            <td class="px-4 py-3">Total del pago inicial</td>
-            <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.requerido_clp | clp }}</td>
-            <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.pagado_clp | clp }}</td>
-            <td class="px-4 py-3 text-right tabular-nums">$ {{ estado_activacion.saldo_clp | clp }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-4 flex flex-wrap items-center gap-3">
-      {% if estado_activacion.completo %}
-        <p class="text-sm font-medium text-green-700">El pago inicial está completo.</p>
-        <form method="post" action="/miembros/{{ miembro.id }}/activar">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit"
-                  class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
-            Activar membresía
-          </button>
-        </form>
-      {% else %}
-        <p class="text-sm font-medium text-amber-700">
-          Falta por pagar $ {{ estado_activacion.saldo_clp | clp }} del pago inicial.
+  <div class="p-6">
+    {% if miembro.situacion_activacion == "activo" %}
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="h-2.5 w-2.5 rounded-full bg-green-500"></span>
+          <span class="text-sm font-medium text-green-700">Membresía activa</span>
+        </div>
+        {% if miembro.matriculado %}
+          <span class="text-sm text-gray-500">Está matriculado: la cuota mensual se rige por el ciclo.</span>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="mb-6">
+        <p class="text-sm text-gray-700">
+          {% if miembro.matriculado %}
+            Está matriculado: no se cobra la Matrícula. La cuota de su categoría se rige por el ciclo mensual.
+          {% else %}
+            Para activar la membresía se debe completar el pago inicial: <strong>Matrícula + la cuota de la categoría elegida</strong> (RN-02).
+          {% endif %}
         </p>
-        <form method="post" action="/miembros/{{ miembro.id }}/activar">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit"
-                  class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
-            Evaluar activación
-          </button>
-        </form>
+        <div class="mt-4 overflow-x-auto rounded border border-gray-100">
+          <table class="min-w-full divide-y divide-gray-100 text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Concepto</th>
+                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Requerido</th>
+                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Pagado</th>
+                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Saldo</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              {% for concepto in estado_activacion.conceptos %}
+                <tr>
+                  <td class="px-4 py-3 text-gray-700">{{ concepto.etiqueta }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ concepto.requerido_clp | clp }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ concepto.pagado_clp | clp }}</td>
+                  <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ concepto.saldo_clp | clp }}</td>
+                </tr>
+              {% endfor %}
+              <tr class="bg-green-50 font-medium">
+                <td class="px-4 py-3 text-gray-900">Total del pago inicial</td>
+                <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ estado_activacion.requerido_clp | clp }}</td>
+                <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ estado_activacion.pagado_clp | clp }}</td>
+                <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ estado_activacion.saldo_clp | clp }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          {% if estado_activacion.completo %}
+            <div class="flex items-center gap-1">
+              <span class="h-2 w-2 rounded-full bg-green-500"></span>
+              <p class="text-sm font-medium text-green-700">El pago inicial está completo.</p>
+            </div>
+            <form method="post" action="/miembros/{{ miembro.id }}/activar">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit"
+                      class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+                Activar membresía
+              </button>
+            </form>
+          {% else %}
+            <div class="flex items-center gap-1">
+              <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+              <p class="text-sm font-medium text-amber-700">Falta por pagar $ {{ estado_activacion.saldo_clp | clp }} del pago inicial.</p>
+            </div>
+            <form method="post" action="/miembros/{{ miembro.id }}/activar">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit"
+                      class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-marca-rojo hover:text-marca-rojo bg-white">
+                Evaluar activación
+              </button>
+            </form>
+          {% endif %}
+        </div>
       {% endif %}
     </div>
-  </div>
-{% endif %}
-
-{# Cambio de categoría con historial (F-05, RN-25, CA-29). #}
-<h2 class="mt-8 text-lg font-semibold">Cambio de categoría</h2>
-<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
-  <p class="text-sm text-gray-500">
-    Cada cambio entre <strong>Activo</strong> y <strong>Membresía</strong> queda registrado
-    y ajusta la cuota mensual del miembro (RN-25).
-  </p>
-  <form method="post" action="/miembros/{{ miembro.id }}/categoria" class="mt-4 flex flex-wrap items-end gap-3">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <div>
-      <label for="categoria" class="block text-xs font-medium text-gray-600">Nueva categoría</label>
-      <select id="categoria" name="categoria"
-              class="mt-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
-        {% for valor in categorias %}
-          <option value="{{ valor }}" {% if valor == miembro.categoria %}selected{% endif %}>
-            {{ etiquetas_categoria.get(valor, valor) }}{% if valor == miembro.categoria %} (actual){% endif %}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-    <button type="submit"
-            class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
-      Cambiar categoría
-    </button>
-  </form>
 </div>
 
-{# Exenciones: becado, invitado/influencer o retirado (F-09, RN-05, CA-03). #}
-<h2 class="mt-8 text-lg font-semibold">Exención de cobros</h2>
-<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
-  {% if miembro.esta_exento %}
-    <p class="text-sm">
-      El miembro está <strong>exento</strong> por
-      <strong>{{ miembro.motivo_exencion }}</strong>. Mientras mantenga esta condición
-      no se generan cobros ni avisos para él (RN-05).
+{# Cambio de categoría con historial (F-05, RN-25, CA-29). #}
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Cambio de categoría</h2>
+  </div>
+  <div class="p-6">
+    <p class="text-sm text-gray-700 mb-4">
+      Cada cambio entre <strong>Activo</strong> y <strong>Membresía</strong> queda registrado
+      y ajusta la cuota mensual del miembro (RN-25).
     </p>
-    <form method="post" action="/miembros/{{ miembro.id }}/exencion/quitar" class="mt-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit"
-              class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
-        Retirar exención
-      </button>
-    </form>
-  {% else %}
-    <p class="text-sm text-gray-500">
-      Marca al miembro como becado, invitado/influencer o retirado para excluirlo del
-      cobro y de los avisos, mostrando su cuota como exenta.
-    </p>
-    <form method="post" action="/miembros/{{ miembro.id }}/exencion" class="mt-4 flex flex-wrap items-end gap-3">
+    <form method="post" action="/miembros/{{ miembro.id }}/categoria" class="mt-4 flex flex-wrap items-end gap-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div>
-        <label for="motivo" class="block text-xs font-medium text-gray-600">Motivo</label>
-        <select id="motivo" name="motivo"
-                class="mt-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
-          {% for motivo in motivos_exencion %}
-            <option value="{{ motivo }}">{{ motivo }}</option>
+        <label for="categoria" class="block text-xs font-medium text-gray-600 mb-1">Nueva categoría</label>
+        <select id="categoria" name="categoria"
+                class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+          {% for valor in categorias %}
+            <option value="{{ valor }}" {% if valor == miembro.categoria %}selected{% endif %}>
+              {{ etiquetas_categoria.get(valor, valor) }}{% if valor == miembro.categoria %} (actual){% endif %}
+            </option>
           {% endfor %}
         </select>
       </div>
       <button type="submit"
               class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
-        Marcar exención
+        Cambiar categoría
       </button>
     </form>
-  {% endif %}
+  </div>
+</div>
+
+{# Exenciones: becado, invitado/influencer o retirado (F-09, RN-05, CA-03). #}
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Exención de cobros</h2>
+  </div>
+  <div class="p-6">
+    {% if miembro.esta_exento %}
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700 border border-violet-100 text-xs font-medium">
+          <span class="h-2 w-2 rounded-full bg-violet-400"></span>
+          Exento
+        </span>
+        <p class="text-sm text-gray-700">por <strong>{{ miembro.motivo_exencion }}</strong></p>
+      </div>
+      <p class="text-sm text-gray-700 mb-4">
+        Mientras mantenga esta condición no se generan cobros ni avisos para él (RN-05).
+      </p>
+      <form method="post" action="/miembros/{{ miembro.id }}/exencion/quitar" class="mt-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+                class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-marca-rojo hover:text-marca-rojo bg-white">
+          Retirar exención
+        </button>
+      </form>
+    {% else %}
+      <p class="text-sm text-gray-700 mb-4">
+        Marca al miembro como becado, invitado/influencer o retirado para excluirlo del
+        cobro y de los avisos, mostrando su cuota como exenta (RN-05).
+      </p>
+      <form method="post" action="/miembros/{{ miembro.id }}/exencion" class="mt-4 flex flex-wrap items-end gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+          <label for="motivo" class="block text-xs font-medium text-gray-600 mb-1">Motivo</label>
+          <select id="motivo" name="motivo"
+                  class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+            {% for motivo in motivos_exencion %}
+              <option value="{{ motivo }}">{{ motivo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit"
+                class="rounded bg-marca-negro px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-gray-800">
+          Marcar exención
+        </button>
+      </form>
+    {% endif %}
+  </div>
 </div>
 
 {# Baja y reactivación del miembro (soft-delete). #}
-<h2 class="mt-8 text-lg font-semibold">Estado del miembro</h2>
-<div class="mt-3 rounded-lg border border-gray-200 bg-white p-6">
-  {% if miembro.fecha_baja %}
-    <p class="text-sm">
-      El miembro está <strong>dado de baja</strong> desde el
-      <strong>{{ miembro.fecha_baja.strftime("%d/%m/%Y") }}</strong>{% if miembro.motivo_baja %}
-      por el motivo <strong>{{ miembro.motivo_baja }}</strong>{% endif %}.
-      Mientras esté de baja no aparece en el panel ni entra al ciclo de cobro, pero
-      su ficha e historial se conservan.
-    </p>
-    <form method="post" action="/miembros/{{ miembro.id }}/reactivar" class="mt-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit"
-              class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
-        Reactivar miembro
-      </button>
-    </form>
-  {% else %}
-    <p class="text-sm text-gray-500">
-      Registrar la baja retira al miembro del panel y de los cobros futuros sin
-      borrar su ficha ni sus pagos. Se puede reactivar después.
-    </p>
-    <form method="post" action="/miembros/{{ miembro.id }}/baja" class="mt-4 flex flex-wrap items-end gap-3">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <div>
-        <label for="fecha_baja" class="block text-xs font-medium text-gray-600">Fecha de baja</label>
-        <input id="fecha_baja" name="fecha_baja" type="date" value="{{ hoy }}"
-               class="mt-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Estado del miembro</h2>
+  </div>
+  <div class="p-6">
+    {% if miembro.fecha_baja %}
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
+               bg-gray-100 text-gray-600 border border-gray-200">
+          <span class="h-2 w-2 rounded-full bg-gray-400"></span>
+          Dado de baja
+        </span>
+        <p class="text-sm text-gray-700">
+          desde el <strong>{{ miembro.fecha_baja.strftime("%d/%m/%Y") }}</strong>{% if miembro.motivo_baja %}
+          por el motivo <strong>{{ miembro.motivo_baja }}</strong>{% endif %}.
+        </p>
       </div>
-      <div class="min-w-[14rem] flex-1">
-        <label for="motivo_baja" class="block text-xs font-medium text-gray-600">Motivo (opcional)</label>
-        <input id="motivo_baja" name="motivo_baja" type="text" maxlength="200"
-               class="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
-      </div>
-      <button type="submit"
-              class="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:border-marca-rojo hover:text-marca-rojo">
-        Dar de baja
-      </button>
-    </form>
-  {% endif %}
+      <p class="text-sm text-gray-700 mb-4">
+        Mientras esté de baja no aparece en el panel ni entra al ciclo de cobro,
+        pero su ficha e historial se conservan.
+      </p>
+      <form method="post" action="/miembros/{{ miembro.id }}/reactivar" class="mt-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+                class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
+          Reactivar miembro
+        </button>
+      </form>
+    {% else %}
+      <p class="text-sm text-gray-700 mb-4">
+        Registrar la baja retira al miembro del panel y de los cobros futuros sin
+        borrar su ficha ni sus pagos. Se puede reactivar después.
+      </p>
+      <form method="post" action="/miembros/{{ miembro.id }}/baja" class="mt-4 flex flex-wrap items-end gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+          <label for="fecha_baja" class="block text-xs font-medium text-gray-600 mb-1">Fecha de baja</label>
+          <input id="fecha_baja" name="fecha_baja" type="date" value="{{ hoy }}"
+                 class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+        </div>
+        <div class="min-w-[14rem] flex-1">
+          <label for="motivo_baja" class="block text-xs font-medium text-gray-600 mb-1">Motivo (opcional)</label>
+          <input id="motivo_baja" name="motivo_baja" type="text" maxlength="200"
+                 class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-marca-rojo focus:outline-none">
+        </div>
+        <button type="submit"
+                class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-marca-rojo hover:text-marca-rojo bg-white">
+          Dar de baja
+        </button>
+      </form>
+    {% endif %}
+  </div>
 </div>
 
 {# Historial de cambios de categoría (CA-29). #}
-<h2 class="mt-8 text-lg font-semibold">Historial de categoría</h2>
-<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
-  <table class="min-w-full divide-y divide-gray-200 text-sm">
-    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-      <tr>
-        <th scope="col" class="px-4 py-3">Fecha</th>
-        <th scope="col" class="px-4 py-3">Cambio</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100 bg-white">
-      {% for registro in historial %}
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Historial de categoría</h2>
+  </div>
+  <div class="p-6 overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-100 text-sm">
+      <thead class="bg-gray-50">
         <tr>
-          <td class="px-4 py-3">{{ registro.fecha.strftime("%d/%m/%Y %H:%M") }}</td>
-          <td class="px-4 py-3">
-            {{ etiquetas_categoria.get(registro.categoria_anterior, registro.categoria_anterior) }}
-            → {{ etiquetas_categoria.get(registro.categoria_nueva, registro.categoria_nueva) }}
-          </td>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Fecha</th>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Cambio</th>
         </tr>
-      {% else %}
-        <tr>
-          <td colspan="2" class="px-4 py-6 text-center text-gray-500">
-            El miembro no ha cambiado de categoría.
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for registro in historial %}
+          <tr>
+            <td class="px-4 py-3 text-gray-700">{{ registro.fecha.strftime("%d/%m/%Y %H:%M") }}</td>
+            <td class="px-4 py-3 text-gray-700">
+              {{ etiquetas_categoria.get(registro.categoria_anterior, registro.categoria_anterior) }}
+              <span class="text-gray-400">→</span>
+              {{ etiquetas_categoria.get(registro.categoria_nueva, registro.categoria_nueva) }}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="2" class="px-4 py-6 text-center text-gray-500">
+              El miembro no ha cambiado de categoría.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
 {# Cuotas del miembro (incluida la Matrícula y las cuotas del ciclo mensual). #}
-<h2 class="mt-8 text-lg font-semibold">Cuotas</h2>
-<div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
-  <table class="min-w-full divide-y divide-gray-200 text-sm">
-    <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-      <tr>
-        <th scope="col" class="px-4 py-3">Periodo</th>
-        <th scope="col" class="px-4 py-3">Concepto</th>
-        <th scope="col" class="px-4 py-3 text-right">Monto</th>
-        <th scope="col" class="px-4 py-3 text-right">Pagado</th>
-        <th scope="col" class="px-4 py-3">Estado</th>
-      </tr>
-    </thead>
-    <tbody class="divide-y divide-gray-100 bg-white">
-      {% for cuota in cuotas %}
+<div class="mt-8 rounded-lg border border-gray-200 bg-white overflow-hidden">
+  <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+    <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Cuotas</h2>
+  </div>
+  <div class="p-6 overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-100 text-sm">
+      <thead class="bg-gray-50">
         <tr>
-          <td class="px-4 py-3">{{ "%02d"|format(cuota.mes) }}/{{ cuota.anio }}</td>
-          <td class="px-4 py-3">{{ cuota.nivel.nombre }}</td>
-          <td class="px-4 py-3 text-right tabular-nums">$ {{ cuota.monto_clp | clp }}</td>
-          <td class="px-4 py-3 text-right tabular-nums">$ {{ cuota.monto_pagado_clp | clp }}</td>
-          <td class="px-4 py-3">
-            {% if cuota.estado == "pagada" %}
-              <span class="text-green-700">Pagada</span>
-            {% elif cuota.estado == "exenta" %}
-              <span class="text-gray-500">Exenta</span>
-            {% elif cuota.estado == "parcial" %}
-              <span class="text-amber-700">Parcial</span>
-            {% else %}
-              <span class="text-red-700">Pendiente</span>
-            {% endif %}
-          </td>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Periodo</th>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Concepto</th>
+          <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Monto</th>
+          <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Pagado</th>
+          <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Estado</th>
         </tr>
-      {% else %}
-        <tr>
-          <td colspan="5" class="px-4 py-6 text-center text-gray-500">
-            No hay cuotas registradas todavía.
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for cuota in cuotas %}
+          <tr>
+            <td class="px-4 py-3 text-gray-700 tabular-nums">{{ "%02d"|format(cuota.mes) }}/{{ cuota.anio }}</td>
+            <td class="px-4 py-3 text-gray-700">{{ cuota.nivel.nombre }}</td>
+            <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ cuota.monto_clp | clp }}</td>
+            <td class="px-4 py-3 text-right tabular-nums text-gray-900">$ {{ cuota.monto_pagado_clp | clp }}</td>
+            <td class="px-4 py-3">
+              {% if cuota.estado == "pagada" %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                  <span class="h-2 w-2 rounded-full bg-green-400"></span> Pagada
+                </span>
+              {% elif cuota.estado == "exenta" %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-100">
+                  <span class="h-2 w-2 rounded-full bg-gray-400"></span> Exenta
+                </span>
+              {% elif cuota.estado == "parcial" %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                  <span class="h-2 w-2 rounded-full bg-amber-400"></span> Parcial
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                  <span class="h-2 w-2 rounded-full bg-red-400"></span> Pendiente
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" class="px-4 py-6 text-center text-gray-500">
+              No hay cuotas registradas todavía.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
-<p class="mt-3 text-xs text-gray-500">
+<p class="mt-4 text-xs text-gray-500">
   La Matrícula es un cargo único de incorporación y no cuenta para la morosidad,
   que solo considera las cuotas mensuales (F-11).
 </p>
