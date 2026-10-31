@@ -3,14 +3,14 @@
 {% from "miembros/_campos.html" import campo, campo_check, campo_categoria %}
 <div id="modal-editar-{{ miembro.id }}" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-editar-titulo-{{ miembro.id }}">
   <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
-       onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')"></div>
+       onclick="cerrarModalEdicion('{{ miembro.id }}')"></div>
 
   <div class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-2xl border border-gray-200 p-6 flex flex-col gap-4">
     <div class="flex items-baseline justify-between gap-2">
       <h2 id="modal-editar-titulo-{{ miembro.id }}" class="text-lg font-bold">Editar — {{ miembro.nombre_completo }}</h2>
       <button type="button"
               class="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-              onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')">
+              onclick="cerrarModalEdicion('{{ miembro.id }}')">
         <span class="sr-only">Cerrar</span>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -22,13 +22,17 @@
       Todos los campos son obligatorios. La fecha de ingreso es la fecha real de incorporación al club.
     </p>
 
+    <div id="errores-modal-{{ miembro.id }}"
+         class="hidden mt-2 rounded-md border border-morosidad-rojo/40 bg-morosidad-rojo/10 px-4 py-3 text-sm text-red-800"
+         role="alert"></div>
+
     <form id="form-editar-{{ miembro.id }}"
           method="post"
           action="/miembros/{{ miembro.id }}/editar"
           class="mt-4 grid gap-3 sm:grid-cols-2"
-          onsubmit="return confirmarEdicionMiembro('{{ miembro.id }}')">
+          onsubmit="return guardarEdicionMiembro(event, '{{ miembro.id }}')">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input type="hidden" name="miembro_id" value="{{ miembro.id }}">
+      <input type="hidden" name="modal" value="1">
 
       {{ campo("nombre_completo", "Nombre completo", {}, miembro.nombre_completo, "text", "Ana Saldívar") }}
       {{ campo("email", "Correo electrónico", {}, miembro.email, "email", "ana@example.com") }}
@@ -48,12 +52,13 @@
         {{ campo_check("matriculado", "Ya está matriculado", miembro.matriculado,
                        "Marca para no generar el cobro de matrícula.", "") }}
         <button type="submit"
+                id="btn-guardar-{{ miembro.id }}"
                 class="rounded bg-marca-rojo px-4 py-2 text-sm font-medium text-marca-blanco hover:bg-red-700">
           Guardar cambios
         </button>
         <button type="button"
                 class="rounded border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onclick="document.getElementById('modal-editar-{{ miembro.id }}').classList.add('hidden')">
+                onclick="cerrarModalEdicion('{{ miembro.id }}')">
           Cancelar
         </button>
       </div>
@@ -62,12 +67,103 @@
 </div>
 
 <script>
-  function confirmarEdicionMiembro(id) {
-    const btn = document.querySelector('#form-editar-' + id + ' button[type="submit"]');
+  function cerrarModalEdicion(id) {
+    document.getElementById('modal-editar-' + id).classList.add('hidden');
+    limpiarErroresModal(id);
+  }
+
+  function limpiarErroresModal(id) {
+    const contenedor = document.getElementById('errores-modal-' + id);
+    if (contenedor) {
+      contenedor.classList.add('hidden');
+      contenedor.textContent = '';
+    }
+    // quitar estilos de error de los campos
+    const form = document.getElementById('form-editar-' + id);
+    if (!form) return;
+    form.querySelectorAll('.border-morosidad-rojo').forEach(el => {
+      el.classList.remove('border-morosidad-rojo');
+      el.classList.add('border-gray-300');
+    });
+    form.querySelectorAll('p.mt-1.text-xs.text-red-700').forEach(el => el.remove());
+  }
+
+  function mostrarErroresModal(id, errores) {
+    limpiarErroresModal(id);
+    const contenedor = document.getElementById('errores-modal-' + id);
+    const form = document.getElementById('form-editar-' + id);
+    if (!form || !contenedor) return;
+
+    // errores de campo
+    for (const [campo, mensaje] of Object.entries(errores)) {
+      const input = form.querySelector('[name="' + campo + '"]');
+      if (input) {
+        input.classList.remove('border-gray-300');
+        input.classList.add('border-morosidad-rojo');
+        const aviso = document.createElement('p');
+        aviso.className = 'mt-1 text-xs text-red-700';
+        aviso.textContent = mensaje;
+        input.parentElement.appendChild(aviso);
+      }
+    }
+
+    // errores generales (csrf, etc.)
+    const generales = {};
+    for (const [campo, mensaje] of Object.entries(errores)) {
+      if (!form.querySelector('[name="' + campo + '"]')) {
+        generales[campo] = mensaje;
+      }
+    }
+    const mensajesGenerales = Object.values(generales);
+    if (mensajesGenerales.length > 0) {
+      contenedor.classList.remove('hidden');
+      contenedor.textContent = mensajesGenerales.join(' ');
+    }
+  }
+
+  async function guardarEdicionMiembro(event, id) {
+    event.preventDefault();
+    const btn = document.getElementById('btn-guardar-' + id);
+    const form = document.getElementById('form-editar-' + id);
+    limpiarErroresModal(id);
+
     if (btn) {
       btn.disabled = true;
       btn.textContent = 'Guardando…';
     }
-    return true;
+
+    try {
+      const respuesta = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+      });
+      const datos = await respuesta.json();
+
+      if (respuesta.ok && datos.ok) {
+        // éxito: recargar para ver los cambios y los flashes
+        window.location.reload();
+      } else if (respuesta.status === 422 && datos.errores) {
+        mostrarErroresModal(id, datos.errores);
+      } else {
+        contenedor = document.getElementById('errores-modal-' + id);
+        if (contenedor) {
+          contenedor.classList.remove('hidden');
+          contenedor.textContent = 'No se pudieron guardar los cambios. Inténtalo nuevamente.';
+        }
+      }
+    } catch (e) {
+      const contenedor = document.getElementById('errores-modal-' + id);
+      if (contenedor) {
+        contenedor.classList.remove('hidden');
+        contenedor.textContent = 'Error de conexión. Inténtalo nuevamente.';
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Guardar cambios';
+      }
+    }
+
+    return false;
   }
 </script>

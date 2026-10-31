@@ -11,7 +11,7 @@ from datetime import date
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
@@ -374,10 +374,13 @@ async def editar_miembro(
     contacto_emergencia: str = Form(""),
     matriculado: bool = Form(False),
     categoria: str = Form(CATEGORIA_ACTIVO),
-) -> HTMLResponse | RedirectResponse:
+    modal: str = Form(""),
+) -> HTMLResponse | RedirectResponse | JSONResponse:
     """Modifica la ficha del miembro sin alterar su historial (T5.3).
 
     Acepta la categoría para editar todos los datos desde el modal.
+    Cuando ``modal == "1"`` devuelve JSON para mostrar errores dentro del
+    modal sin salir de la página.
     """
     miembro = _obtener_miembro(db, miembro_id)
     if categoria not in CATEGORIAS:
@@ -396,6 +399,11 @@ async def editar_miembro(
         matriculado=matriculado,
     )
     if not _csrf_ok(request, csrf_token):
+        if modal == "1":
+            return JSONResponse(
+                {"errores": {"csrf": "Sesión expirada. Inténtalo nuevamente."}},
+                status_code=422,
+            )
         return _redirigir(f"/miembros/{miembro.id}")
 
     entrada, errores = _validar_ficha(datos)
@@ -406,6 +414,8 @@ async def editar_miembro(
                 "Ya existe otro miembro registrado con este correo electrónico."
             )
     if entrada is None or errores:
+        if modal == "1":
+            return JSONResponse({"errores": errores}, status_code=422)
         return templates.TemplateResponse(
             request=request,
             name="miembros/formulario.html",
@@ -445,6 +455,8 @@ async def editar_miembro(
     )
     if categoria != miembro.categoria:
         servicio_membresias.cambiar_categoria(db, miembro, categoria, usuario)
+    if modal == "1":
+        return JSONResponse({"ok": True})
     flash(request, "ok", "Datos del miembro actualizados.")
     return _redirigir(f"/miembros/{miembro.id}")
 
