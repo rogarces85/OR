@@ -289,7 +289,7 @@ async def mostrar_importar_pagos(
     return templates.TemplateResponse(
         request=request,
         name="pagos/importar.html",
-        context={},
+        context={"csrf_token": ""},
     )
 
 
@@ -317,6 +317,7 @@ async def importar_pagos(
             request=request,
             name="pagos/importar.html",
             context={
+                "csrf_token": "",
                 "mensajes": [{"tipo": "error", "texto": str(exc)}],
             },
         )
