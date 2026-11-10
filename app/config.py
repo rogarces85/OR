@@ -7,6 +7,7 @@ código. Ver ``.env.example`` para la plantilla de variables.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -38,6 +39,11 @@ class Settings(BaseSettings):
     session_cookie: str = "or_sesion"
     session_max_age: int = 60 * 60 * 8  # 8 horas
 
+    # --- Bóveda de documentos (FT-06) ---
+    vault_path: str = "./vault"
+    master_key_b64: str = ""  # Obligatorio en producción (generar con scripts/vault/generar_master_key.py)
+    vault_dedup_enabled: bool = True
+
     @property
     def database_url(self) -> str:
         """Cadena de conexión de SQLAlchemy para MySQL/MariaDB (driver PyMySQL)."""
@@ -47,6 +53,11 @@ class Settings(BaseSettings):
             f"mysql+pymysql://{usuario}:{clave}@{self.db_host}:{self.db_port}"
             f"/{self.db_name}?charset=utf8mb4"
         )
+
+    @property
+    def vault_path_resolved(self) -> Path:
+        """Ruta absoluta resuelta del vault."""
+        return Path(self.vault_path).resolve()
 
 
 @lru_cache

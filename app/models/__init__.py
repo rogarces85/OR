@@ -26,6 +26,7 @@ from app.models.usuario import (
     ROLES_GESTION,
     Usuario,
 )
+from app.models.vault import DocumentoVault, TipoDocumento
 
 __all__ = [
     "ROLES",
@@ -41,6 +42,7 @@ __all__ = [
     "CompraItem",
     "CuentaBancaria",
     "CuotaMensual",
+    "DocumentoVault",
     "Egreso",
     "GastoFijo",
     "HistorialCategoria",
@@ -50,5 +52,6 @@ __all__ = [
     "NivelCuota",
     "Pago",
     "PlantillaCorreo",
+    "TipoDocumento",
     "Usuario",
 ]

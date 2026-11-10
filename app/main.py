@@ -25,6 +25,7 @@ from app.routers import (
     negociaciones,
     pagos,
     reportes,
+    vault,
 )
 
 settings = get_settings()
@@ -61,6 +62,7 @@ app.include_router(finanzas.router)
 app.include_router(compras.router)
 app.include_router(reportes.router)
 app.include_router(cuenta.router)
+app.include_router(vault.router)
 
 
 @app.get("/salud")

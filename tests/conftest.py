@@ -23,7 +23,9 @@ from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401  (registra todos los modelos en Base.metadata)
 from app.core import cache
+from app.core.crypto import derive_master_key, MasterKeyData
 from app.core.seguridad import hash_password
+from app.config import get_settings
 from app.database import Base
 from app.models.finanzas import CATEGORIAS_BASE
 from app.models.membresia import (
@@ -47,6 +49,16 @@ from app.models.usuario import ROL_ADMIN, Usuario
 from app.repositories import finanzas as repo_finanzas
 from app.repositories import membresia as repo_membresia
 from app.repositories import miembro as repo_miembro
+
+# Configurar MASTER_KEY_B64 para tests ANTES de importar get_settings
+_mk_test = derive_master_key("test-master-password-for-tests", b"testsalt12345678")
+os.environ["MASTER_KEY_B64"] = MasterKeyData(
+    key=derive_master_key("test-master-password-for-tests", b"testsalt12345678").key,
+    salt=b"testsalt12345678"
+).to_b64()
+
+# Limpiar cache de settings para que tome la nueva variable de entorno
+get_settings.cache_clear()
 
 URL_PRUEBAS = os.getenv("TEST_DATABASE_URL", "sqlite+pysqlite:///:memory:")
 
