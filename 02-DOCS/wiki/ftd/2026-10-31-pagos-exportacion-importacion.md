@@ -1,12 +1,14 @@
 ---
 author: Rodrigo Garces
 branch: pagos-exportacion-importacion
-status: in-progress
+status: done
 type: brief
 title: Exportación e importación masiva de pagos
 description: Exportar pagos a XLSX y cargar múltiples pagos desde un archivo XLSX o CSV.
 timestamp: 2026-10-31T13:00:00Z
 topic: ftd
+merged: 2026-10-31
+pr: #6
 ---
 
 # Exportación e importación masiva de pagos
@@ -45,5 +47,4 @@ Permitir exportar los pagos registrados a un archivo XLSX y importar múltiples 
 - `ruff check app tests` → **All checks passed!**
 
 ## Next
-
-Commitear en rama `pagos-exportacion-importacion` y abrir PR para fusione en `main`.
+Fusionado en main el 2026-10-31 (8bf2123).

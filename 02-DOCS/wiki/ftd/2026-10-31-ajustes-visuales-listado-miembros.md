@@ -1,12 +1,14 @@
 ---
 author: Rodrigo Garces
 branch: miembros-visuales-ajustes
-status: in-progress
+status: done
 type: brief
 title: Ajustes visuales de listado Miembros
 description: Botones de acciones visibles (quitar onclick de fila que los bloqueaba) y textos de categoría simplificados a Activo / Membresía.
 timestamp: 2026-10-31T12:30:00Z
 topic: ftd
+merged: 2026-10-31
+pr: #5
 ---
 
 # Ajustes visuales de listado Miembros
@@ -38,5 +40,4 @@ Corregir dos problemas visuales del listado de miembros: los botones de acciones
 - `ruff check app tests` → **All checks passed!**
 
 ## Next
-
-Commitear en rama `miembros-visuales-ajustes` y abrir PR para fusione en `main`.
+Fusionado en main el 2026-10-31 (c44d4f0).

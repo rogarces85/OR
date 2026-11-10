@@ -1,12 +1,14 @@
 ---
 author: Rodrigo Garces
 branch: miembros-mejoras-visuales
-status: in-progress
+status: done
 type: brief
 title: Mejoras visuales del módulo Miembros
 description: Listado con badges de estado y columna de acciones, ficha con tarjeta de resumen y secciones en cards, modal con campos agrupados y validación en tiempo real.
 timestamp: 2026-10-31T12:00:00Z
 topic: ftd
+merged: 2026-10-31
+pr: #4
 ---
 
 # Mejoras visuales del módulo Miembros
@@ -46,5 +48,4 @@ Mejorar la experiencia visual y de uso del módulo Miembros: listado más escane
 - `ruff check app tests` → **All checks passed!**
 
 ## Next
-
-Commitear en rama `miembros-mejoras-visuales` y abrir PR para fusione en `main`.
+Fusionado en main el 2026-10-31 (e0e056b).
